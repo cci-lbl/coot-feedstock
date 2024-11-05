@@ -20,9 +20,9 @@ for d in fftw mmdb2 ssm libccp4 clipper coot; do
     echo "Replacing ${d}/config.sub"
   else
     echo "${d}/config.sub is not present"
-    echo "============="
-    echo
   fi
+  echo "============="
+  echo
 done
 
 # fftw
