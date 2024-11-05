@@ -11,6 +11,19 @@ echo "Building dependencies"
 echo "====================="
 echo
 
+# use updated config.sub if present
+for d in fftw mmdb2 ssm libccp4 clipper coot; do
+  echo "Checking ${d}"
+  echo "============="
+  if [[ -f "${d}/config.sub" ]]; then
+    cp ${RECIPE_DIR}/patches/config.sub ${d}/config.sub
+    echo "Replacing ${d}/config.sub"
+  else:
+    echo "${d}/config.sub is not present"
+  echo "============="
+  echo
+done
+
 # fftw
 echo "Building fftw"
 cd fftw
@@ -76,7 +89,7 @@ cd coot
 rm -rf autom4te.cache
 if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
 if [ -e config.guess ] ; then rm config.guess ; fi
-if [ -e config.sub   ] ; then rm config.sub   ; fi
+# if [ -e config.sub   ] ; then rm config.sub   ; fi
 ./autogen.sh
 
 export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
