@@ -1,0 +1,8 @@
+rdkit:
+  - 2023.09.4
+libboost_devel:
+  - '1.82'
+libboost_headers:
+  - '1.82'
+libboost_python_devel:
+  - '1.82'

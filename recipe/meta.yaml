@@ -1,0 +1,127 @@
+{% set name = "coot" %}
+{% set version = "1.1.10" %}
+{% set extras_place = "https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/dependencies" %}
+
+package:
+  skip: true  # [win]
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  - url: https://github.com/pemsley/coot/archive/refs/tags/Release-{{ version }}.tar.gz
+    folder: coot
+  - url: {{ extras_place }}/clipper-2.1.20180802.tar.gz
+    folder: clipper
+  - url: {{ extras_place }}/fftw-2.1.5.tar.gz
+    folder: fftw
+  - url: {{ extras_place }}/libccp4-6.5.1.tar.gz
+    folder: libccp4
+  - url: {{ extras_place }}/mmdb2-2.0.22.tar.gz
+    folder: mmdb2
+  - url: {{ extras_place}}/ssm-1.4.tar.gz
+    folder: ssm
+  - url: {{ extras_place }}/reference-structures.tar.gz
+    folder: reference-structures
+  - url: {{ extras_place }}/refmac-monomer-library.tar.gz
+    folder: monomers
+  - patches:
+      # for clang and C++11 "C++11 requires a space between literal and identifier"
+      - patches/ssm_superpose.patch
+
+build:
+  number: 0
+  ignore_run_exports:
+    - expat
+    - gemmi
+    - guile  # [linux]
+    - pygobject
+    - glfw
+    - libboost
+    - libexpat
+    - libgl  # [linux]
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ stdlib('c') }}
+    - {{ compiler('cxx') }}
+    - autoconf  # [unix]
+    - automake  # [unix]
+    - libtool  # [unix]
+    - llvm-openmp  # [osx]
+    - libgomp      # [linux]
+    - m4  # [unix]
+    - make
+    - pkg-config
+    - swig
+  host:
+    - cairo
+    - epoxy
+    - expat
+    - freetype
+    - gdk-pixbuf
+    - gemmi
+    - glfw
+    - glib
+    - glm
+    - gsl
+    - guile  # [linux]
+    - libboost-python-devel
+    - libboost-devel
+    - libcurl
+    - libgl-devel  # [linux]
+    - libgraphene
+    - libopenblas
+    - libpng
+    - libsqlite
+    - pango
+    - pygobject
+    - python
+    - gtk4
+    - rdkit
+    - zlib
+  run:
+    - epoxy
+    - expat
+    - gemmi
+    - glfw
+    - gsl
+    - guile  # [linux]
+    - libcurl
+    - libgraphene
+    - pygobject
+    - python
+    - gtk4
+    - rdkit
+
+test:
+  # Some packages might need a `test/commands` key to check CLI.
+  # List all the packages/modules that `run_test.py` imports.
+  # imports:
+  #   - simplejson
+  #   - simplejson.tests
+  # For python packages, it is useful to run pip check. However, sometimes the
+  # metadata used by pip is out of date. Thus this section is optional if it is
+  # failing.
+  # requires:
+  #   - pip
+  commands:
+    - ls
+
+about:
+  home: https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/
+  summary: 'Coot'
+  description: |
+    Coot is for macromolecular model building, model completion and validation, particularly suitable for protein modelling using X-ray data.
+    Coot displays maps and models and allows model manipulations such as idealization, real space refinement, manual rotation/translation, rigid-body fitting, ligand search, solvation, mutations, rotamers, Ramachandran plots, skeletonization, non-crystallographic symmetry and more.
+    These days it is useful for cryo-EM data and models, too.
+  license: LGPL-3.0-only
+  license_family: LGPL
+  doc_url: https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/web/docs/
+  dev_url: https://github.com/pemsley/coot
+
+extra:
+  recipe-maintainers:
+    - pemsley
+    - LucreziaCatapano
+    - bkpoon

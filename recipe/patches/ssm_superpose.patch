@@ -1,0 +1,27 @@
+diff --git a/ssm/superpose.cpp b/ssm/superpose.cpp
+index d49ccc0..6433bb6 100644
+--- a/ssm/superpose.cpp
++++ b/ssm/superpose.cpp
+@@ -114,7 +114,7 @@ void printInstructions ( char *argv0 )  {
+ #endif
+     " Protein Structure Superposition\n"
+     " -------------------------------\n"
+-    " v."superpose_version" from "superpose_date" built with SSM v.%i.%i.%i, "
++    " v." superpose_version" from " superpose_date" built with SSM v.%i.%i.%i, "
+     "MMDB v.%i.%i.%i\n"
+     "\n"
+     " USAGE:\n"
+@@ -295,7 +295,7 @@ int             argNo,i,nStructures,rc;
+   }
+ 
+   printf ( "\n"
+-    " Superpose v."superpose_version" from "superpose_date" "
++    " Superpose v." superpose_version" from " superpose_date" "
+                                         "(based on SSM algorithm)\n"
+     " ---------------------------------------------------------\n\n"
+    );
+@@ -418,4 +418,3 @@ int             argNo,i,nStructures,rc;
+   return 0;
+ 
+ }
+-
