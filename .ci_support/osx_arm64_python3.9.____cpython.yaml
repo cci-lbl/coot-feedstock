@@ -61,3 +61,19 @@ zip_keys:
   - cxx_compiler_version
 zlib:
 - '1'
+
+CONDA_BUILD_SYSROOT:
+- /Users/bkpoon/software/MacOSX11.0.sdk
+
+
+CONDA_BUILD_SYSROOT:
+- /Users/bkpoon/software/MacOSX11.0.sdk
+
+
+CONDA_BUILD_SYSROOT:
+- /Users/bkpoon/software/MacOSX11.0.sdk
+
+
+CONDA_BUILD_SYSROOT:
+- /Users/bkpoon/software/MacOSX11.0.sdk
+

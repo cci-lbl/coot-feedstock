@@ -25,6 +25,8 @@ source:
   - url: {{ extras_place }}/refmac-monomer-library.tar.gz
     folder: monomers
   - patches:
+      # for libccp4 on Apple Silicon
+      - patches/libccp4.patch
       # for clang and C++11 "C++11 requires a space between literal and identifier"
       - patches/ssm_superpose.patch
 
