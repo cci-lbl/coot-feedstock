@@ -18,10 +18,11 @@ for d in fftw mmdb2 ssm libccp4 clipper coot; do
   if [[ -f "${d}/config.sub" ]]; then
     cp ${RECIPE_DIR}/patches/config.sub ${d}/config.sub
     echo "Replacing ${d}/config.sub"
-  else:
+  else
     echo "${d}/config.sub is not present"
-  echo "============="
-  echo
+    echo "============="
+    echo
+  fi
 done
 
 # fftw
