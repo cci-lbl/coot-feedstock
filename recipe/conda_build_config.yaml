@@ -1,3 +1,5 @@
+channel_sources:
+  - cctbx-dev,conda-forge
 rdkit:
   - 2023.09.4
 libboost_devel:
