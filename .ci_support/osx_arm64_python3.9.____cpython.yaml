@@ -13,7 +13,7 @@ c_stdlib_version:
 cairo:
 - '1'
 channel_sources:
-- conda-forge
+- cctbx-dev,conda-forge
 channel_targets:
 - conda-forge main
 cxx_compiler:
@@ -61,19 +61,3 @@ zip_keys:
   - cxx_compiler_version
 zlib:
 - '1'
-
-CONDA_BUILD_SYSROOT:
-- /Users/bkpoon/software/MacOSX11.0.sdk
-
-
-CONDA_BUILD_SYSROOT:
-- /Users/bkpoon/software/MacOSX11.0.sdk
-
-
-CONDA_BUILD_SYSROOT:
-- /Users/bkpoon/software/MacOSX11.0.sdk
-
-
-CONDA_BUILD_SYSROOT:
-- /Users/bkpoon/software/MacOSX11.0.sdk
-
