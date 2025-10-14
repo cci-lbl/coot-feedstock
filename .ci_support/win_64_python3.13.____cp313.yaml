@@ -1,25 +1,15 @@
 c_compiler:
-- gcc
-c_compiler_version:
-- '13'
+- vs2022
 c_stdlib:
-- sysroot
-c_stdlib_version:
-- '2.17'
+- vs
 cairo:
 - '1'
-cdt_name:
-- cos7
 channel_sources:
 - cctbx-dev,conda-forge
 channel_targets:
 - conda-forge main
 cxx_compiler:
-- gxx
-cxx_compiler_version:
-- '13'
-docker_image:
-- quay.io/condaforge/linux-anvil-cos7-x86_64
+- vs2022
 expat:
 - '2'
 freetype:
@@ -47,15 +37,10 @@ pin_run_as_build:
     min_pin: x.x
     max_pin: x.x
 python:
-- 3.9.* *_cpython
+- 3.13.* *_cp313
 rdkit:
 - 2023.09.4
 target_platform:
-- linux-64
-zip_keys:
-- - c_compiler_version
-  - cxx_compiler_version
-- - c_stdlib_version
-  - cdt_name
+- win-64
 zlib:
 - '1'
