@@ -1,0 +1,7 @@
+includedir=${prefix}/include
+
+Name: GLM
+Description: OpenGL Mathematics
+URL: https://glm.g-truc.net
+Version: 1.0.1
+Cflags: -I${includedir}
