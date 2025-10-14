@@ -21,9 +21,9 @@ glib:
 gsl:
 - '2.7'
 libboost_devel:
-- '1.82'
+- '1.86'
 libboost_python_devel:
-- '1.82'
+- '1.86'
 libcurl:
 - '8'
 libpng:
@@ -39,7 +39,7 @@ pin_run_as_build:
 python:
 - 3.13.* *_cp313
 rdkit:
-- 2023.09.4
+- 2024.09.5
 target_platform:
 - win-64
 zlib:
