@@ -93,7 +93,6 @@ requirements:
     - python
     - gtk4
     - librdkit-dev
-    - librdkit
     - zlib
   run:
     - epoxy
