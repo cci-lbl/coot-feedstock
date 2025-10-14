@@ -1,5 +1,9 @@
 channel_sources:
   - cctbx-dev,conda-forge
+librdkit:
+  - 2025.09.1
+librdkit_dev:
+  - 2025.09.1
 libboost_devel:
   - '1.86'
 libboost_headers:
