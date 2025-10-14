@@ -38,8 +38,6 @@ pin_run_as_build:
     max_pin: x.x
 python:
 - 3.11.* *_cpython
-rdkit:
-- 2024.09.5
 target_platform:
 - win-64
 zlib:
