@@ -1,10 +1,10 @@
 channel_sources:
   - cctbx-dev,conda-forge
 rdkit:
-  - 2023.09.4
+  - 2024.09.5
 libboost_devel:
-  - '1.82'
+  - '1.86'
 libboost_headers:
-  - '1.82'
+  - '1.86'
 libboost_python_devel:
-  - '1.82'
+  - '1.86'
