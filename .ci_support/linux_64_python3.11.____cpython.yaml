@@ -36,6 +36,10 @@ libcurl:
 - '8'
 libpng:
 - '1.6'
+librdkit:
+- 2025.09.1
+librdkit_dev:
+- 2025.09.1
 libsqlite:
 - '3'
 pango:
