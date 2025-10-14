@@ -5,9 +5,9 @@ c_stdlib:
 cairo:
 - '1'
 channel_sources:
-- cctbx-dev,conda-forge
+- conda-forge
 channel_targets:
-- conda-forge main
+- cctbx-dev main
 cxx_compiler:
 - vs2022
 expat:
@@ -28,10 +28,6 @@ libcurl:
 - '8'
 libpng:
 - '1.6'
-librdkit:
-- 2025.09.1
-librdkit_dev:
-- 2025.09.1
 libsqlite:
 - '3'
 pango:
