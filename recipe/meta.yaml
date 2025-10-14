@@ -92,7 +92,8 @@ requirements:
     - pygobject
     - python
     - gtk4
-    - rdkit
+    - librdkit-dev
+    - librdkit
     - zlib
   run:
     - epoxy
@@ -106,7 +107,7 @@ requirements:
     - pygobject
     - python
     - gtk4
-    - rdkit
+    - librdkit
 
 test:
   # Some packages might need a `test/commands` key to check CLI.
