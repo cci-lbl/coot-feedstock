@@ -8,8 +8,11 @@ if [[ ! -z "$MACOSX_DEPLOYMENT_TARGET" ]]; then
 fi
 
 # patch glm pkg-config
+echo "Creating glm.pc"
+ls ${PREFIX}/share/pkgconfig
 echo "prefix=${PREFIX}" > ${PREFIX}/share/pkgconfig/glm.pc
 cat ${RECIPE_DIR}/glm.pc >> ${PREFIX}/share/pkgconfig/glm.pc
+ls ${PREFIX}/share/pkgconfig
 
 echo "Building dependencies"
 echo "====================="
