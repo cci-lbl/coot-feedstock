@@ -9,6 +9,7 @@ fi
 
 # patch glm pkg-config
 echo "Creating glm.pc"
+mkdir -p ${PREFIX}/share/pkgconfig
 ls ${PREFIX}/share/pkgconfig
 echo "prefix=${PREFIX}" > ${PREFIX}/share/pkgconfig/glm.pc
 cat ${RECIPE_DIR}/glm.pc >> ${PREFIX}/share/pkgconfig/glm.pc
