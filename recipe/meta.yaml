@@ -1,5 +1,5 @@
 {% set name = "coot" %}
-{% set version = "1.1.19" %}
+{% set version = "1.1.20" %}
 {% set extras_place = "https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/dependencies" %}
 
 package:
@@ -14,7 +14,7 @@ source:
     folder: clipper
   - url: {{ extras_place }}/fftw-2.1.5.tar.gz
     folder: fftw
-  - url: {{ extras_place }}/libccp4-6.5.1.tar.gz
+  - url: {{ extras_place }}/libccp4-8.0.0.tar.gz
     folder: libccp4
   - url: {{ extras_place }}/mmdb2-2.0.22.tar.gz
     folder: mmdb2
@@ -26,7 +26,7 @@ source:
     folder: monomers
   - patches:
       # for libccp4 on Apple Silicon
-      - patches/libccp4.patch
+      # - patches/libccp4.patch
       # for clang and C++11 "C++11 requires a space between literal and identifier"
       - patches/ssm_superpose.patch
 
