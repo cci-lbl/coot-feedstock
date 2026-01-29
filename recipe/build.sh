@@ -92,6 +92,9 @@ make install
 cd ..
 echo
 
+# debug info
+pkg-config --list-all
+
 # coot
 echo "Building coot"
 echo "============="
