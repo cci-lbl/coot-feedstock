@@ -111,15 +111,17 @@ if [ -e config.guess ] ; then rm config.guess ; fi
 
 ./configure \
   --prefix=${PREFIX} \
-  --with-fftw-prefix=${PREFIX} \
+  --disable-static \
   --with-boost=${PREFIX}  \
   --with-boost-libdir=${PREFIX}/lib  \
   --with-enhanced-ligand-tools \
+  --with-fftw-prefix=${PREFIX} \
+  --with-gemmi=${PREFIX} \
+  --with-glm=${PREFIX} \
   --with-rdkit-prefix=${PREFIX} \
   --with-guile \
-  --disable-static \
   --with-glib-prefix=${PREFIX} \
-  --with-gtk-prefix==${PREFIX} \
+  --with-gtk-prefix=${PREFIX} \
   --with-sysroot=${PREFIX}
 make -j ${CORES}
 make install
