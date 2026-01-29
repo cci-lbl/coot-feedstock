@@ -94,6 +94,7 @@ echo
 
 # debug info
 pkg-config --list-all
+cp $PKG_CONFIG_PATH/ccp4c.pc $PKG_CONFIG_PATH/libccp4c.pc
 
 # coot
 echo "Building coot"
