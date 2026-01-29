@@ -113,6 +113,7 @@ if [ -e config.guess ] ; then rm config.guess ; fi
 ./configure \
   --prefix=${PREFIX} \
   --disable-static \
+  --with-backward \
   --with-boost=${PREFIX}  \
   --with-boost-libdir=${PREFIX}/lib  \
   --with-enhanced-ligand-tools \
