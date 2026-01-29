@@ -15,6 +15,8 @@ echo "prefix=${PREFIX}" > ${PREFIX}/share/pkgconfig/glm.pc
 cat ${RECIPE_DIR}/glm.pc >> ${PREFIX}/share/pkgconfig/glm.pc
 ls ${PREFIX}/share/pkgconfig
 
+export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+
 echo "Building dependencies"
 echo "====================="
 echo
@@ -103,8 +105,6 @@ if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
 if [ -e config.guess ] ; then rm config.guess ; fi
 # if [ -e config.sub   ] ; then rm config.sub   ; fi
 ./autogen.sh
-
-export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 
 ./configure \
   --prefix=${PREFIX} \
