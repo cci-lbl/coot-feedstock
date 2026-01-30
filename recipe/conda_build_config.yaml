@@ -1,5 +1,7 @@
 channel_targets:
   - cctbx-dev main
+MACOSX_DEPLOYMENT_TARGET:     # [osx]
+  - 14.0                      # [osx]
 python:
   # part of a zip_keys: python, is_python_min
   - 3.9.* *_cpython
