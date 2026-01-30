@@ -123,8 +123,7 @@ if [ -e config.guess ] ; then rm config.guess ; fi
   --with-rdkit-prefix=${PREFIX} \
   --with-guile \
   --with-glib-prefix=${PREFIX} \
-  --with-gtk-prefix=${PREFIX} \
-  --with-sysroot=${PREFIX}
+  --with-gtk-prefix=${PREFIX}
 make -j ${CORES}
 make install
 cd ..
