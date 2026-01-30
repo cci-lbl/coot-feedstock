@@ -3,9 +3,9 @@
 CORES=4
 
 # https://conda-forge.org/docs/maintainer/knowledge_base/#newer-c-features-with-old-sdk
-if [[ ! -z "$MACOSX_DEPLOYMENT_TARGET" ]]; then
-  CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY"
-fi
+# if [[ ! -z "$MACOSX_DEPLOYMENT_TARGET" ]]; then
+#   CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY"
+# fi
 
 # patch glm pkg-config
 echo "Creating glm.pc"
