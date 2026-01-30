@@ -32,15 +32,15 @@ source:
 
 build:
   number: 0
-  ignore_run_exports:
-    - expat
-    - gemmi
-    - guile  # [linux]
-    - pygobject
-    - glfw
-    - libboost
-    - libexpat
-    - libgl  # [linux]
+  # ignore_run_exports:
+  #   - expat
+  #   - gemmi
+  #   - guile  # [linux]
+  #   - pygobject
+  #   - glfw
+  #   - libboost
+  #   - libexpat
+  #   - libgl  # [linux]
 
 requirements:
   build:
