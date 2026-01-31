@@ -101,33 +101,33 @@ echo "Building coot"
 echo "============="
 echo
 
-cd coot
+# cd coot
 
-# automake (from build-it-3-3)
-rm -rf autom4te.cache
-if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
-if [ -e config.guess ] ; then rm config.guess ; fi
-# if [ -e config.sub   ] ; then rm config.sub   ; fi
-./autogen.sh
+# # automake (from build-it-3-3)
+# rm -rf autom4te.cache
+# if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
+# if [ -e config.guess ] ; then rm config.guess ; fi
+# # if [ -e config.sub   ] ; then rm config.sub   ; fi
+# ./autogen.sh
 
-./configure \
-  --prefix=${PREFIX} \
-  --disable-static \
-  --with-backward \
-  --with-boost=${PREFIX}  \
-  --with-boost-libdir=${PREFIX}/lib  \
-  --with-enhanced-ligand-tools \
-  --with-fftw-prefix=${PREFIX} \
-  --with-gemmi=${PREFIX} \
-  --with-glm=${PREFIX} \
-  --with-rdkit-prefix=${PREFIX} \
-  --with-guile \
-  --with-glib-prefix=${PREFIX} \
-  --with-gtk-prefix=${PREFIX}
-make -j ${CORES}
-make install
-cd ..
-echo
+# ./configure \
+#   --prefix=${PREFIX} \
+#   --disable-static \
+#   --with-backward \
+#   --with-boost=${PREFIX}  \
+#   --with-boost-libdir=${PREFIX}/lib  \
+#   --with-enhanced-ligand-tools \
+#   --with-fftw-prefix=${PREFIX} \
+#   --with-gemmi=${PREFIX} \
+#   --with-glm=${PREFIX} \
+#   --with-rdkit-prefix=${PREFIX} \
+#   --with-guile \
+#   --with-glib-prefix=${PREFIX} \
+#   --with-gtk-prefix=${PREFIX}
+# make -j ${CORES}
+# make install
+# cd ..
+# echo
 
 # copy monomer library and reference structures
 mkdir -p ${PREFIX}/share/coot
