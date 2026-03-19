@@ -8,7 +8,9 @@ package:
   version: {{ version }}
 
 source:
-  - url: https://github.com/pemsley/coot/archive/refs/tags/Release-{{ version }}.tar.gz
+  # - url: https://github.com/pemsley/coot/archive/refs/tags/Release-{{ version }}.tar.gz
+  - git_url: https://github.com/pemsley/coot.git
+    git_depth: 1
     folder: coot
   - url: {{ extras_place }}/clipper-2.1.20180802.tar.gz
     folder: clipper
