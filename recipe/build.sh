@@ -41,7 +41,7 @@ done
 # fftw
 echo "Building fftw"
 cd fftw
-./configure --prefix=${PREFIX} --enable-shared --enable-float
+./configure --prefix=${PREFIX} --enable-shared --enable-float arm-apple-darwin
 make -j ${CORES}
 make install
 cd ..
@@ -68,7 +68,7 @@ echo
 # libccp4
 echo "Building libccp4"
 cd libccp4
-./configure --prefix=${PREFIX} --enable-shared --disable-static --disable-fortran
+./configure --prefix=${PREFIX} --enable-shared --disable-static
 make -j ${CORES}
 make install
 cd ..
@@ -132,5 +132,5 @@ echo
 # copy monomer library and reference structures
 mkdir -p ${PREFIX}/share/coot
 mkdir -p ${PREFIX}/share/coot/lib/data
-cp -a monomers ${PREFIX}/share/coot/lib/data
-cp -a reference-structures ${PREFIX}/share/coot
+ln -s monomers ${PREFIX}/share/coot/lib/data/monomers
+ln -s reference-structures ${PREFIX}/share/coot/reference-structures
