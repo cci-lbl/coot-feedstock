@@ -1,9 +1,6 @@
 azure:
   user_or_org: cctbx-release
   project_name: feedstock-builds
-  store_build_artifacts: true
-build_platform:
-  osx_arm64: osx_64
 conda_build:
   pkg_format: '2'
   zstd_compression_level: 22
@@ -12,5 +9,15 @@ github:
   repo_name: coot-feedstock
   branch_name: main
   tooling_branch_name: main
+provider:
+  osx_arm64: github_actions
 test: native
 upload_on_branch: main
+workflow_settings:
+  store_build_artifacts:
+  - platform:
+    - linux_64
+    - osx_64
+    - osx_arm64
+    - win_64
+    value: true
