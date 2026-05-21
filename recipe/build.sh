@@ -38,6 +38,28 @@ for d in fftw mmdb2 ssm libccp4 clipper coot; do
   echo
 done
 
+# maeparser
+echo "Building maeparser"
+cd maeparser
+mkdir -p build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=${PREFIX} -DMAEPARSER_BUILD_TESTS=OFF ..
+make && make install
+cd ../..
+
+# coordgenlibs
+echo "Building coordgenlibs"
+cd coordgenlibs
+mkdir -p build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+      -DCOORDGEN_USE_MAEPARSER=ON \
+      -DCOORDGEN_BUILD_TESTS=OFF \
+      -DCOORDGEN_BUILD_EXAMPLE=OFF \
+    ..
+make && make install
+cd ../..
+
 # fftw
 echo "Building fftw"
 cd fftw
@@ -68,7 +90,7 @@ echo
 # libccp4
 echo "Building libccp4"
 cd libccp4
-./configure --prefix=${PREFIX} --enable-shared --disable-static
+CFLAGS=${CFLAGS} -Wno-error=incompatible-pointer-types ./configure --prefix=${PREFIX} --enable-shared --disable-static
 make -j ${CORES}
 make install
 cd ..
