@@ -1,0 +1,13 @@
+@if "%COOT_DATA_DIR_CONDA_BACKUP%" == "" (
+    set "COOT_DATA_DIR="
+) else (
+    set "COOT_DATA_DIR=%COOT_DATA_DIR_CONDA_BACKUP%"
+)
+@set "COOT_DATA_DIR_CONDA_BACKUP="
+
+@if "%COOT_PREFIX_CONDA_BACKUP%" == "" (
+    set "COOT_PREFIX="
+) else (
+    set "COOT_PREFIX=%COOT_PREFIX_CONDA_BACKUP%"
+)
+@set "COOT_PREFIX_CONDA_BACKUP="
