@@ -22,6 +22,10 @@ cxx_compiler_version:
 - '19'
 expat:
 - '2'
+fortran_compiler:
+- gfortran
+fortran_compiler_version:
+- '14'
 freetype:
 - '2'
 gdk_pixbuf:
@@ -31,9 +35,9 @@ glib:
 gsl:
 - '2.7'
 libboost_devel:
-- '1.86'
+- '1.88'
 libboost_python_devel:
-- '1.86'
+- '1.88'
 libcurl:
 - '8'
 libpng:
@@ -57,5 +61,6 @@ target_platform:
 zip_keys:
 - - c_compiler_version
   - cxx_compiler_version
+  - fortran_compiler_version
 zlib:
 - '1'
