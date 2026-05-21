@@ -56,6 +56,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${PREFIX} \
       -DCOORDGEN_USE_MAEPARSER=ON \
       -DCOORDGEN_BUILD_TESTS=OFF \
       -DCOORDGEN_BUILD_EXAMPLE=OFF \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     ..
 make && make install
 cd ../..
@@ -90,7 +91,7 @@ echo
 # libccp4
 echo "Building libccp4"
 cd libccp4
-CFLAGS=${CFLAGS} -Wno-error=incompatible-pointer-types ./configure --prefix=${PREFIX} --enable-shared --disable-static
+CFLAGS="${CFLAGS} -Wno-error=incompatible-pointer-types" ./configure --prefix=${PREFIX} --enable-shared --disable-static
 make -j ${CORES}
 make install
 cd ..
@@ -151,8 +152,62 @@ make install
 cd ..
 echo
 
-# copy monomer library and reference structures
-mkdir -p ${PREFIX}/share/coot
+# Also build libcootapi and coot_headless_api via CMake (alongside the
+# autotools GUI build above). The autotools install path doesn't ship
+# the headless API libraries, Python bindings, MCP socket bridge +
+# skills, or public headers - upstream's CMake target covers those.
+# Requires nanobind as a host dep in meta.yaml.
+echo "Building cootapi via CMake"
+echo "=========================="
+echo
+cd coot
+mkdir -p build-cmake
+cd build-cmake
+cmake \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPython_EXECUTABLE=${PREFIX}/bin/python \
+  -DMMDB2_LIBRARY=${PREFIX}/lib/libmmdb2.dylib \
+  -DMMDB2_INCLUDE_DIR=${PREFIX}/include \
+  -DSSM_LIBRARY=${PREFIX}/lib/libssm.dylib \
+  -DSSM_INCLUDE_DIR=${PREFIX}/include \
+  -DCCP4C_LIBRARY=${PREFIX}/lib/libccp4c.dylib \
+  -DCLIPPER-CORE_LIBRARY=${PREFIX}/lib/libclipper-core.dylib \
+  -DCLIPPER-CORE_INCLUDE_DIR=${PREFIX}/include \
+  -DCLIPPER-CCP4_LIBRARY=${PREFIX}/lib/libclipper-ccp4.dylib \
+  -DCLIPPER-CCP4_INCLUDE_DIR=${PREFIX}/include \
+  -DCLIPPER-MMDB_LIBRARY=${PREFIX}/lib/libclipper-mmdb.dylib \
+  -DCLIPPER-MMDB_INCLUDE_DIR=${PREFIX}/include \
+  -DCLIPPER-CIF_LIBRARY=${PREFIX}/lib/libclipper-cif.dylib \
+  -DCLIPPER-CIF_INCLUDE_DIR=${PREFIX}/include \
+  -DCLIPPER-CONTRIB_LIBRARY=${PREFIX}/lib/libclipper-contrib.dylib \
+  -DCLIPPER-CONTRIB_INCLUDE_DIR=${PREFIX}/include \
+  -DCLIPPER-MINIMOL_LIBRARY=${PREFIX}/lib/libclipper-minimol.dylib \
+  -DCLIPPER-MINIMOL_INCLUDE_DIR=${PREFIX}/include \
+  -DFFTW2_LIBRARY=${PREFIX}/lib/libfftw.dylib \
+  -DRFFTW2_LIBRARY=${PREFIX}/lib/librfftw.dylib \
+  -DFFTW2_INCLUDE_DIRS=${PREFIX}/include \
+  ..
+make -j ${CORES}
+make install
+cd ../..
+echo
+
+# Replace the CMake-installed monomers (coot's own bundled set) with
+# the refmac-monomer-library tarball that this recipe pulls in - that
+# is the canonical library we want to ship.
 mkdir -p ${PREFIX}/share/coot/lib/data
-cp -a monomers ${PREFIX}/share/coot/lib/data
-cp -a reference-structures ${PREFIX}/share/coot
+rm -rf ${PREFIX}/share/coot/lib/data/monomers
+ln -s monomers ${PREFIX}/share/coot/lib/data/monomers
+
+# reference-structures isn't installed by either build system.
+ln -s reference-structures ${PREFIX}/share/coot/reference-structures
+
+# install activate/deactivate scripts to set COOT_DATA_DIR / COOT_PREFIX.
+# Without this, baked-in PKGDATADIR is corrupted by conda's NUL-padded
+# prefix replacement combined with clang/libc++ compile-time strlen folding,
+# producing paths with embedded NULs that fail to locate any data files.
+mkdir -p ${PREFIX}/etc/conda/activate.d
+mkdir -p ${PREFIX}/etc/conda/deactivate.d
+cp ${RECIPE_DIR}/coot-activate.sh   ${PREFIX}/etc/conda/activate.d/coot-activate.sh
+cp ${RECIPE_DIR}/coot-deactivate.sh ${PREFIX}/etc/conda/deactivate.d/coot-deactivate.sh

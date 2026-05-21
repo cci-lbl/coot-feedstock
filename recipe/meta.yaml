@@ -14,13 +14,13 @@ source:
     folder: coot
   - url: {{ extras_place }}/clipper-2.1.20180802.tar.gz
     folder: clipper
-  - url: {{ extras_place }}/coordgenlibs-3.0.2.tar.gz 
+  - url: https://github.com/schrodinger/coordgenlibs/archive/refs/tags/v3.0.2.tar.gz
     folder: coordgenlibs
   - url: {{ extras_place }}/fftw-2.1.5.tar.gz
     folder: fftw
   - url: {{ extras_place }}/libccp4-8.0.0.tar.gz
     folder: libccp4
-  - url: {{ extras_place }}/maeparser-1.3.3.tar.gz
+  - url: https://github.com/schrodinger/maeparser/archive/refs/tags/v1.3.3.tar.gz
     folder: maeparser
   - url: {{ extras_place }}/mmdb2-2.0.22.tar.gz
     folder: mmdb2
@@ -75,6 +75,7 @@ requirements:
     - {{ compiler('fortran') }}
     - autoconf  # [unix]
     - automake  # [unix]
+    - cmake
     - libtool  # [unix]
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
@@ -102,6 +103,7 @@ requirements:
     - libopenblas
     - libpng
     - libsqlite
+    - nanobind
     - pango
     - pygobject
     - python

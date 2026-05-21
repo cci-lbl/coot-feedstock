@@ -1,0 +1,13 @@
+if [ -z "${COOT_DATA_DIR_CONDA_BACKUP:-}" ]; then
+    unset COOT_DATA_DIR
+else
+    export COOT_DATA_DIR="$COOT_DATA_DIR_CONDA_BACKUP"
+fi
+unset COOT_DATA_DIR_CONDA_BACKUP
+
+if [ -z "${COOT_PREFIX_CONDA_BACKUP:-}" ]; then
+    unset COOT_PREFIX
+else
+    export COOT_PREFIX="$COOT_PREFIX_CONDA_BACKUP"
+fi
+unset COOT_PREFIX_CONDA_BACKUP
