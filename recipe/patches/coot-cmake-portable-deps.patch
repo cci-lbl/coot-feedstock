@@ -16,6 +16,11 @@ The fftw2 and ccp4c locations are also resolved here, since the rest
 of the CMakeLists references FFTW2_LIBRARY / RFFTW2_LIBRARY /
 FFTW2_INCLUDE_DIRS / CCP4C_LIBRARY without ever setting them.
 
+Also normalises ${libdwarf} / ${libelf} to empty strings when the
+optional debug-info libraries aren't installed on Linux.  Without that
+they stay as -NOTFOUND and cmake fails at generate time when those
+vars are fed into target_link_libraries(... ${libdwarf} ${libelf}).
+
 diff --git a/coot/CMakeLists.txt b/coot/CMakeLists.txt
 --- a/coot/CMakeLists.txt
 +++ b/coot/CMakeLists.txt
@@ -58,3 +63,19 @@ diff --git a/coot/CMakeLists.txt b/coot/CMakeLists.txt
 
  find_package(BLAS)
  find_package(GSL REQUIRED)
+@@ -46,8 +70,15 @@
+ # only via homebrew on macOS (not tried to compile them myself) - see below also though.
+ if (APPLE)
+ else()
+    find_library(libelf elf)
+    find_library(libdwarf dw)
++   # libdwarf/libelf are only used by backward.cpp when -DBACKWARD_HAS_DW
++   # is set (see the ENABLE_DWARF_ELF block below).  Without this they
++   # stay as -NOTFOUND on systems that don't ship them, and feeding
++   # that into target_link_libraries(... ${libdwarf} ${libelf}) makes
++   # cmake fail at generate time.
++   if(NOT libelf)   set(libelf   "") endif()
++   if(NOT libdwarf) set(libdwarf "") endif()
+ endif(APPLE)
+
+ # From Charles
