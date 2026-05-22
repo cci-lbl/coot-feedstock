@@ -1,0 +1,60 @@
+Use find_library / find_path for the CCP4 stack so the CMake build
+configures successfully on macOS, Linux, and Windows.
+
+The original block:
+    if (APPLE)
+    else()
+       find_package(CCP4 REQUIRED mmdb2 ssm ...)
+    endif(APPLE)
+was a no-op on macOS (relied on the caller passing every
+MMDB2_LIBRARY / SSM_LIBRARY / CLIPPER-*_LIBRARY via -D) and broken on
+every other platform - CCP4 ships no CMake config files and there is
+no FindCCP4.cmake on CMAKE_MODULE_PATH.  Replacing it with explicit
+find_library/find_path lets CMAKE_PREFIX_PATH do the work everywhere.
+
+The fftw2 and ccp4c locations are also resolved here, since the rest
+of the CMakeLists references FFTW2_LIBRARY / RFFTW2_LIBRARY /
+FFTW2_INCLUDE_DIRS / CCP4C_LIBRARY without ever setting them.
+
+diff --git a/coot/CMakeLists.txt b/coot/CMakeLists.txt
+--- a/coot/CMakeLists.txt
++++ b/coot/CMakeLists.txt
+@@ -14,10 +14,34 @@
+ # Without RDKit, Coot currently needs C++17
+ set(CMAKE_CXX_STANDARD 20)
+
+-if (APPLE)
+-else()
+-   find_package(CCP4 REQUIRED mmdb2 ssm clipper-core clipper-mmdb clipper-ccp4 clipper-contrib clipper-minimol clipper-cif)
+-endif(APPLE)
++# Locate the CCP4 stack (mmdb2, ssm, libccp4, clipper, fftw2) via
++# find_library / find_path so this works on every platform.  CCP4
++# does not ship CMake config files and there is no FindCCP4.cmake on
++# CMAKE_MODULE_PATH, so the original find_package(CCP4 ...) call
++# only worked when the caller supplied every MMDB2_LIBRARY /
++# SSM_LIBRARY / CLIPPER-*_LIBRARY via -D.
++find_library(MMDB2_LIBRARY mmdb2 REQUIRED)
++find_path(MMDB2_INCLUDE_DIR mmdb2/mmdb_manager.h REQUIRED)
++
++find_library(SSM_LIBRARY ssm REQUIRED)
++find_path(SSM_INCLUDE_DIR ssm/ssm_align.h REQUIRED)
++
++find_library(CCP4C_LIBRARY ccp4c REQUIRED)
++
++find_library(CLIPPER-CORE_LIBRARY clipper-core REQUIRED)
++find_path(CLIPPER-CORE_INCLUDE_DIR clipper/clipper.h REQUIRED)
++find_library(CLIPPER-MMDB_LIBRARY clipper-mmdb REQUIRED)
++find_library(CLIPPER-CCP4_LIBRARY clipper-ccp4 REQUIRED)
++find_library(CLIPPER-CIF_LIBRARY clipper-cif REQUIRED)
++find_library(CLIPPER-CONTRIB_LIBRARY clipper-contrib REQUIRED)
++find_library(CLIPPER-MINIMOL_LIBRARY clipper-minimol REQUIRED)
++set(CLIPPER-MMDB_INCLUDE_DIR ${CLIPPER-CORE_INCLUDE_DIR})
++set(CLIPPER-CCP4_INCLUDE_DIR ${CLIPPER-CORE_INCLUDE_DIR})
++set(CLIPPER-CIF_INCLUDE_DIR ${CLIPPER-CORE_INCLUDE_DIR})
++
++find_library(FFTW2_LIBRARY NAMES fftw sfftw REQUIRED)
++find_library(RFFTW2_LIBRARY NAMES rfftw srfftw REQUIRED)
++find_path(FFTW2_INCLUDE_DIRS fftw.h REQUIRED)
+
+ find_package(BLAS)
+ find_package(GSL REQUIRED)

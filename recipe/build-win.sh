@@ -186,26 +186,6 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Release \
   -DPython_EXECUTABLE=${PREFIX}/python.exe \
-  -DMMDB2_LIBRARY=${PREFIX}/lib/libmmdb2.${SHLIB_EXT} \
-  -DMMDB2_INCLUDE_DIR=${PREFIX}/include \
-  -DSSM_LIBRARY=${PREFIX}/lib/libssm.${SHLIB_EXT} \
-  -DSSM_INCLUDE_DIR=${PREFIX}/include \
-  -DCCP4C_LIBRARY=${PREFIX}/lib/libccp4c.${SHLIB_EXT} \
-  -DCLIPPER-CORE_LIBRARY=${PREFIX}/lib/libclipper-core.${SHLIB_EXT} \
-  -DCLIPPER-CORE_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CCP4_LIBRARY=${PREFIX}/lib/libclipper-ccp4.${SHLIB_EXT} \
-  -DCLIPPER-CCP4_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-MMDB_LIBRARY=${PREFIX}/lib/libclipper-mmdb.${SHLIB_EXT} \
-  -DCLIPPER-MMDB_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CIF_LIBRARY=${PREFIX}/lib/libclipper-cif.${SHLIB_EXT} \
-  -DCLIPPER-CIF_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CONTRIB_LIBRARY=${PREFIX}/lib/libclipper-contrib.${SHLIB_EXT} \
-  -DCLIPPER-CONTRIB_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-MINIMOL_LIBRARY=${PREFIX}/lib/libclipper-minimol.${SHLIB_EXT} \
-  -DCLIPPER-MINIMOL_INCLUDE_DIR=${PREFIX}/include \
-  -DFFTW2_LIBRARY=${PREFIX}/lib/libfftw.${SHLIB_EXT} \
-  -DRFFTW2_LIBRARY=${PREFIX}/lib/librfftw.${SHLIB_EXT} \
-  -DFFTW2_INCLUDE_DIRS=${PREFIX}/include \
   -G "MSYS Makefiles" \
   ..
 make -j ${CORES}

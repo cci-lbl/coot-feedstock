@@ -34,6 +34,9 @@ source:
       # - patches/libccp4.patch
       # for clang and C++11 "C++11 requires a space between literal and identifier"
       - patches/ssm_superpose.patch
+      # find_library/find_path for the CCP4 stack so the CMake build
+      # configures on every platform without per-platform -D flags.
+      - patches/coot-cmake-portable-deps.patch
 
 build:
   number: 0

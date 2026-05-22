@@ -167,26 +167,6 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Release \
   -DPython_EXECUTABLE=${PREFIX}/bin/python \
-  -DMMDB2_LIBRARY=${PREFIX}/lib/libmmdb2.dylib \
-  -DMMDB2_INCLUDE_DIR=${PREFIX}/include \
-  -DSSM_LIBRARY=${PREFIX}/lib/libssm.dylib \
-  -DSSM_INCLUDE_DIR=${PREFIX}/include \
-  -DCCP4C_LIBRARY=${PREFIX}/lib/libccp4c.dylib \
-  -DCLIPPER-CORE_LIBRARY=${PREFIX}/lib/libclipper-core.dylib \
-  -DCLIPPER-CORE_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CCP4_LIBRARY=${PREFIX}/lib/libclipper-ccp4.dylib \
-  -DCLIPPER-CCP4_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-MMDB_LIBRARY=${PREFIX}/lib/libclipper-mmdb.dylib \
-  -DCLIPPER-MMDB_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CIF_LIBRARY=${PREFIX}/lib/libclipper-cif.dylib \
-  -DCLIPPER-CIF_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-CONTRIB_LIBRARY=${PREFIX}/lib/libclipper-contrib.dylib \
-  -DCLIPPER-CONTRIB_INCLUDE_DIR=${PREFIX}/include \
-  -DCLIPPER-MINIMOL_LIBRARY=${PREFIX}/lib/libclipper-minimol.dylib \
-  -DCLIPPER-MINIMOL_INCLUDE_DIR=${PREFIX}/include \
-  -DFFTW2_LIBRARY=${PREFIX}/lib/libfftw.dylib \
-  -DRFFTW2_LIBRARY=${PREFIX}/lib/librfftw.dylib \
-  -DFFTW2_INCLUDE_DIRS=${PREFIX}/include \
   ..
 make -j ${CORES}
 make install
