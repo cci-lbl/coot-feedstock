@@ -40,6 +40,7 @@ source:
 
 build:
   number: 0
+  skip: True  # [win or py<311]
   # ignore_run_exports:
   #   - expat
   #   - gemmi
