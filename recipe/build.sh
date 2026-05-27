@@ -178,10 +178,12 @@ echo
 # is the canonical library we want to ship.
 mkdir -p ${PREFIX}/share/coot/lib/data
 rm -rf ${PREFIX}/share/coot/lib/data/monomers
-ln -s monomers ${PREFIX}/share/coot/lib/data/monomers
+cp -aL monomers ${PREFIX}/share/coot/lib/data/monomers
 
-# reference-structures isn't installed by either build system.
-ln -s reference-structures ${PREFIX}/share/coot/reference-structures
+# reference-structures isn't installed by either build system, so copy
+# it in from the tarball this recipe unpacks.
+rm -rf ${PREFIX}/share/coot/reference-structures
+cp -aL reference-structures ${PREFIX}/share/coot/reference-structures
 
 # install activate/deactivate scripts to set COOT_DATA_DIR / COOT_PREFIX.
 # Without this, baked-in PKGDATADIR is corrupted by conda's NUL-padded
