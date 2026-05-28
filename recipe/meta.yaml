@@ -37,6 +37,8 @@ source:
       # find_library/find_path for the CCP4 stack so the CMake build
       # configures on every platform without per-platform -D flags.
       - patches/coot-cmake-portable-deps.patch
+      # Install the MCP socket bridge + skills tree under share/coot/mcp/.
+      - patches/coot-cmake-install-mcp.patch
 
 build:
   number: 0

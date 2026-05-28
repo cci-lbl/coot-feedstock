@@ -1,0 +1,23 @@
+Install the MCP socket bridge and skills tree under share/coot/mcp/.
+
+Upstream's CMakeLists.txt builds coot_mcp_socket_bridge.py and the
+mcp/docs/skills/ tree but doesn't install either of them, so the
+binary package ends up without them. phenix.chat and other MCP-aware
+clients expect the files at <prefix>/share/coot/mcp/{bridge,skills/}
+following the conda standard (Library/share/coot/mcp/ on Windows).
+
+This patch can be dropped once upstream ships the install rules.
+
+diff --git a/coot/CMakeLists.txt b/coot/CMakeLists.txt
+--- a/coot/CMakeLists.txt
++++ b/coot/CMakeLists.txt
+@@ -676,6 +676,9 @@ install(DIRECTORY data/cho-links     DESTINATION share/coot/data)
+
+ install(DIRECTORY data/pdb-templates DESTINATION share/coot/data)
+
++install(FILES     mcp/coot_mcp_socket_bridge.py DESTINATION share/coot/mcp)
++install(DIRECTORY mcp/docs/skills              DESTINATION share/coot/mcp)
++
+ install(DIRECTORY ${coot_src}/analysis     DESTINATION include/coot/analysis     FILES_MATCHING PATTERN "*.hh" PATTERN "*.h")
+ install(DIRECTORY ${coot_src}/angles       DESTINATION include/coot/angles       FILES_MATCHING PATTERN "*.hh" PATTERN "*.h")
+ install(DIRECTORY ${coot_src}/api          DESTINATION include/coot/api          FILES_MATCHING PATTERN "*.hh" PATTERN "*.h")
