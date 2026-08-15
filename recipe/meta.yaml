@@ -90,6 +90,7 @@ requirements:
     - swig
   host:
     - cairo
+    - doxygen
     - epoxy
     - expat
     - freetype
