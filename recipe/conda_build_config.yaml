@@ -17,3 +17,10 @@ fortran_compiler_version:  # [unix]
   - '14'  # [osx]
 llvm_openmp:  # [osx]
   - '19'  # [osx]
+# Interim pin: the linux-anvil-aarch64:alma10 tag pushed on 2026-10-21 is
+# labeled linux/amd64 in its manifest list, so native arm64 runners cannot
+# pull it (conda-forge/docker-images#341). Pull the arm64 image manifest by
+# digest instead. Drop this once docker-images#342 lands and a fixed tag is
+# pushed.
+docker_image:  # [os.environ.get("BUILD_PLATFORM") == "linux-aarch64"]
+  - quay.io/condaforge/linux-anvil-aarch64@sha256:fc5f9d446c5a77502cc7228d865f4f6a6e799756aca1613de167db62d7f7663b  # [os.environ.get("BUILD_PLATFORM") == "linux-aarch64"]
