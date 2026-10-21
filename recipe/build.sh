@@ -119,6 +119,22 @@ echo
 pkg-config --list-all
 cp $PKG_CONFIG_PATH/ccp4c.pc $PKG_CONFIG_PATH/libccp4c.pc
 
+# rdkit 2026.09.1 ships a BoundsMatrixBuilder.h that includes
+# BoundsMatrixBuilderDetails.h, but its CMake install list omits that
+# file (rdkit PR #9434), so every Coot source that pulls in
+# DistGeomUtils.h fails to compile. Add the copy fetched by meta.yaml
+# next to BoundsMatrixBuilder.h when the installed rdkit references it
+# but does not ship it. It is removed again after the build so it does
+# not end up in this package.
+RDKIT_DGH_DIR=${PREFIX}/include/rdkit/GraphMol/DistGeomHelpers
+RDKIT_DETAILS_ADDED=0
+if grep -q 'BoundsMatrixBuilderDetails.h' ${RDKIT_DGH_DIR}/BoundsMatrixBuilder.h \
+   && [[ ! -f ${RDKIT_DGH_DIR}/BoundsMatrixBuilderDetails.h ]]; then
+  echo "Adding BoundsMatrixBuilderDetails.h missing from librdkit-dev"
+  cp ${SRC_DIR}/rdkit-headers/BoundsMatrixBuilderDetails.h ${RDKIT_DGH_DIR}/
+  RDKIT_DETAILS_ADDED=1
+fi
+
 # coot
 echo "Building coot"
 echo "============="
@@ -193,3 +209,8 @@ mkdir -p ${PREFIX}/etc/conda/activate.d
 mkdir -p ${PREFIX}/etc/conda/deactivate.d
 cp ${RECIPE_DIR}/coot-activate.sh   ${PREFIX}/etc/conda/activate.d/coot-activate.sh
 cp ${RECIPE_DIR}/coot-deactivate.sh ${PREFIX}/etc/conda/deactivate.d/coot-deactivate.sh
+
+# Drop the rdkit header added above so it is not packaged with coot.
+if [[ "${RDKIT_DETAILS_ADDED}" == "1" ]]; then
+  rm -f ${RDKIT_DGH_DIR}/BoundsMatrixBuilderDetails.h
+fi
