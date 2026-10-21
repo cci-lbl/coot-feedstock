@@ -3,9 +3,9 @@ channel_targets:
 MACOSX_DEPLOYMENT_TARGET:     # [osx]
   - 14.0                      # [osx]
 libboost_devel:
-  - '1.88'
+  - '1.90'
 libboost_python_devel:
-  - '1.88'
+  - '1.90'
 c_compiler_version:  # [unix]
   - '14'  # [linux]
   - '19'  # [osx]
