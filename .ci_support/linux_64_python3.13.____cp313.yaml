@@ -33,9 +33,9 @@ glib:
 gsl:
 - '2.7'
 libboost_devel:
-- '1.88'
+- '1.90'
 libboost_python_devel:
-- '1.88'
+- '1.90'
 libcurl:
 - '8'
 libpng:
