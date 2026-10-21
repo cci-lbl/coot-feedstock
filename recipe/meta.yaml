@@ -1,6 +1,9 @@
 {% set name = "coot" %}
 {% set version = "1.3.4" %}
 {% set extras_place = "https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/dependencies" %}
+# rdkit release whose BoundsMatrixBuilderDetails.h is fetched below; keep
+# in step with the librdkit-dev that resolves in the host environment.
+{% set rdkit_release = "Release_2026_09_1" %}
 
 package:
   name: {{ name|lower }}
@@ -29,6 +32,13 @@ source:
     folder: reference-structures
   - url: {{ extras_place }}/refmac-monomer-library.tar.gz
     folder: monomers
+  # rdkit 2026.09.1 made the public BoundsMatrixBuilder.h include
+  # BoundsMatrixBuilderDetails.h (rdkit PR #9434) but did not add the new
+  # file to the CMake install list, so librdkit-dev lacks it. build.sh
+  # drops this copy into the rdkit include tree when it is missing.
+  - url: https://raw.githubusercontent.com/rdkit/rdkit/{{ rdkit_release }}/Code/GraphMol/DistGeomHelpers/BoundsMatrixBuilderDetails.h
+    sha256: 1b1c0d298a69ef3c71a9fc43765cb51c057620bd4facbbab97489f5d9251890c
+    folder: rdkit-headers
   - patches:
       # for libccp4 on Apple Silicon
       # - patches/libccp4.patch
