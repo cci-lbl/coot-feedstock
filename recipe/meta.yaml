@@ -118,6 +118,7 @@ requirements:
     - glfw
     - glib
     - glm
+    - gnutls
     - gsl
     - guile  # [linux]
     - libboost-python-devel
@@ -147,6 +148,9 @@ requirements:
     - guile  # [linux]
     - libcurl
     - libgraphene
+    # share/coot/mcp/coot_mcp_socket_bridge.py imports mcp.server.fastmcp,
+    # which mcp 2.x removed.
+    - mcp >=1.2,<2
     - pygobject
     - python
     - gtk4

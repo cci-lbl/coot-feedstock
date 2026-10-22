@@ -117,9 +117,9 @@ echo
 
 # vte (GTK4 flavor) for the Python console and AI terminal. Built here
 # because conda-forge's vte package exists only for linux-64. Introspection,
-# vala, docs, gnutls, icu, fribidi, and the demo app are off: Coot uses the
-# C API only, and this keeps the extra runtime deps to pcre2, lz4-c,
-# simdutf, and fmt.
+# vala, docs, icu, fribidi, and the demo app are off: Coot uses the C API
+# only. gnutls stays on so the terminal does not print its unencrypted
+# scrollback warning.
 echo "Building vte"
 cd vte
 meson setup ${MESON_ARGS} \
@@ -133,7 +133,7 @@ meson setup ${MESON_ARGS} \
   -Ddocs=false \
   -Dapp=false \
   -Dglade=false \
-  -Dgnutls=false \
+  -Dgnutls=true \
   -Dicu=false \
   -Dfribidi=false \
   -D_systemd=false \
