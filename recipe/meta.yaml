@@ -58,6 +58,8 @@ source:
       - patches/coot-cmake-portable-deps.patch
       # Install the MCP socket bridge + skills tree under share/coot/mcp/.
       - patches/coot-cmake-install-mcp.patch
+      # Let the bridge import mcp 2.x (MCPServer) as well as 1.x (FastMCP).
+      - patches/coot-mcp-bridge-mcp2.patch
 
 build:
   number: 0
@@ -152,9 +154,8 @@ requirements:
     - guile  # [linux]
     - libcurl
     - libgraphene
-    # share/coot/mcp/coot_mcp_socket_bridge.py imports mcp.server.fastmcp,
-    # which mcp 2.x removed.
-    - mcp >=1.2,<2
+    # share/coot/mcp/coot_mcp_socket_bridge.py (patched above for mcp 2.x)
+    - mcp >=1.2
     - pygobject
     - python
     - gtk4
