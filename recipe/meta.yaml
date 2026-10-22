@@ -37,6 +37,10 @@ source:
   - url: https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz
     sha256: aca1caa8478aebcdbb1d67897fb3511eb7601debae6810e16a15b6fa25f31ac8
     folder: vte
+    patches:
+      # On macOS the forked child sizes a stack buffer from RLIMIT_NOFILE
+      # (8 MiB at the common 1048576 limit) and dies before exec.
+      - patches/vte-fdwalk-bounded-buffer.patch
   # rdkit 2026.09.1 made the public BoundsMatrixBuilder.h include
   # BoundsMatrixBuilderDetails.h (rdkit PR #9434) but did not add the new
   # file to the CMake install list, so librdkit-dev lacks it. build.sh
