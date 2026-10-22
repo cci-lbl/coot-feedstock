@@ -1,7 +1,9 @@
 channel_targets:
   - cctbx-dev main
-MACOSX_DEPLOYMENT_TARGET:     # [osx]
-  - 14.0                      # [osx]
+MACOSX_SDK_VERSION:  # [osx]
+  - '14.0'           # [osx]
+c_stdlib_version:    # [osx]
+  - '14.0'           # [osx]
 libboost_devel:
   - '1.90'
 libboost_python_devel:
