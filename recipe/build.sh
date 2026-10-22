@@ -115,6 +115,35 @@ make install
 cd ..
 echo
 
+# vte (GTK4 flavor) for the Python console and AI terminal. Built here
+# because conda-forge's vte package exists only for linux-64. Introspection,
+# vala, docs, gnutls, icu, fribidi, and the demo app are off: Coot uses the
+# C API only, and this keeps the extra runtime deps to pcre2, lz4-c,
+# simdutf, and fmt.
+echo "Building vte"
+cd vte
+meson setup ${MESON_ARGS} \
+  --prefix=${PREFIX} \
+  --libdir=lib \
+  --default-library=shared \
+  --wrap-mode=nofallback \
+  -Dgtk3=false \
+  -Dgtk4=true \
+  -Dgir=false \
+  -Dvapi=false \
+  -Ddocs=false \
+  -Dapp=false \
+  -Dglade=false \
+  -Dgnutls=false \
+  -Dicu=false \
+  -Dfribidi=false \
+  -D_systemd=false \
+  builddir
+ninja -C builddir -j ${CORES}
+ninja -C builddir install
+cd ..
+echo
+
 # debug info
 pkg-config --list-all
 cp $PKG_CONFIG_PATH/ccp4c.pc $PKG_CONFIG_PATH/libccp4c.pc
@@ -160,6 +189,7 @@ if [ -e config.guess ] ; then rm config.guess ; fi
   --with-gemmi=${PREFIX} \
   --with-glm=${PREFIX} \
   --with-rdkit-prefix=${PREFIX} \
+  --with-vte=${PREFIX} \
   --with-guile \
   --with-glib-prefix=${PREFIX} \
   --with-gtk-prefix=${PREFIX}

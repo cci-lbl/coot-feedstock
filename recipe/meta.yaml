@@ -32,6 +32,11 @@ source:
     folder: reference-structures
   - url: {{ extras_place }}/refmac-monomer-library.tar.gz
     folder: monomers
+  # VTE terminal widget (GTK4 flavor) for the Python console and AI button.
+  # conda-forge's vte package is linux-64 only, so build it here.
+  - url: https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz
+    sha256: aca1caa8478aebcdbb1d67897fb3511eb7601debae6810e16a15b6fa25f31ac8
+    folder: vte
   # rdkit 2026.09.1 made the public BoundsMatrixBuilder.h include
   # BoundsMatrixBuilderDetails.h (rdkit PR #9434) but did not add the new
   # file to the CMake install list, so librdkit-dev lacks it. build.sh
@@ -96,6 +101,8 @@ requirements:
     - libgomp      # [linux]
     - m4  # [unix]
     - make
+    - meson
+    - ninja
     - pkg-config
     - swig
   host:
@@ -103,6 +110,8 @@ requirements:
     - doxygen
     - epoxy
     - expat
+    - fast_float
+    - fmt
     - freetype
     - gdk-pixbuf
     - gemmi
@@ -119,10 +128,13 @@ requirements:
     - libopenblas
     - libpng
     - libsqlite
+    - lz4-c
     - nanobind
     - pango
+    - pcre2
     - pygobject
     - python
+    - simdutf
     - gtk4
     - librdkit-dev
     - zlib
