@@ -124,7 +124,6 @@ echo "Building vte"
 cd vte
 meson setup ${MESON_ARGS} \
   --prefix=${PREFIX} \
-  --libdir=lib \
   --default-library=shared \
   --wrap-mode=nofallback \
   -Dgtk3=false \
