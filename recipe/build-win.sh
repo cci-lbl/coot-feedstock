@@ -73,13 +73,20 @@ echo "Building fftw"
 echo "============="
 cd fftw
 # fftw 2.1.5 ships libtool 1.4.3, which only knows 32-bit MinGW and quietly
-# produces static archives. Regenerate with the MSYS2 autotools (as WinCoot
-# does), then link librfftw against libfftw so -no-undefined holds.
-autoreconf -vfi
-./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --enable-float \
-  LDFLAGS="$LDFLAGS -no-undefined"
+# produces static archives. Regenerate libtool, configure, and the
+# Makefiles with the MSYS2 autotools; autoheader is skipped because the
+# shipped config.h.in predates templates it now insists on. Then link
+# librfftw against libfftw so -no-undefined holds.
+libtoolize --force --copy
+aclocal
+autoconf
+automake --add-missing --copy --force-missing
+./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --enable-float
 sed -i 's?^librfftw_la_LIBADD =.*?librfftw_la_LIBADD = ../fftw/libfftw.la?' rfftw/Makefile
-make -j "$CORES"
+# -no-undefined is a libtool link flag; given at make time it reaches only
+# libtool's link lines, whereas in configure's LDFLAGS the compiler checks
+# would reject it.
+make -j "$CORES" LDFLAGS="$LDFLAGS -no-undefined"
 make install
 cd ..
 echo
@@ -122,8 +129,8 @@ echo "================"
 cd clipper
 patch -p1 < "$RECIPE_U/patches/clipper-mingw-sysdep.patch"
 # clipper's Makefile.am files lack -no-undefined, which libtool needs to
-# build DLLs; passing it through LDFLAGS reaches every link line.
-LDFLAGS="$LDFLAGS -no-undefined" ./configure $CONFIGURE_HOST \
+# build DLLs; passing it at make time reaches every libtool link line.
+./configure $CONFIGURE_HOST \
   --prefix="$LP_U" \
   --enable-shared --disable-static \
   --enable-mmdb \
@@ -131,7 +138,7 @@ LDFLAGS="$LDFLAGS -no-undefined" ./configure $CONFIGURE_HOST \
   --enable-ccp4 \
   --enable-minimol \
   --enable-cns
-make -j "$CORES"
+make -j "$CORES" LDFLAGS="$LDFLAGS -no-undefined"
 make install
 cd ..
 echo
