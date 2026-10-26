@@ -362,7 +362,9 @@ if [ -e config.guess ] ; then rm config.guess ; fi
   GSL_CFLAGS="-I$LP_M/include" \
   GSL_LIBS="-L$LP_M/lib -lgsl -lgslcblas" \
   CXXFLAGS="-O2 -Wa,-mbig-obj"
-make -j "$CORES"
+# -k: a failing compile still stops the build (make exits non-zero) but the
+# log then carries every failing file instead of only the first.
+make -k -j "$CORES"
 make install
 cd ..
 echo "Python modules:"

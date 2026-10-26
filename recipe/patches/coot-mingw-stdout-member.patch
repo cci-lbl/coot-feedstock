@@ -1,0 +1,56 @@
+diff -ruN a/src/c-interface.cc b/src/c-interface.cc
+--- a/src/c-interface.cc
++++ b/src/c-interface.cc
+@@ -7194,7 +7194,7 @@
+             const char* output_str = PyUnicode_AsUTF8(captured);
+             if (output_str && strlen(output_str) > 0) {
+                std::cout << output_str;  // Print to terminal
+-               rc.stdout = output_str;
++               rc.stdout_py = output_str;
+             }
+             Py_DECREF(captured);
+          }
+@@ -7286,7 +7286,7 @@
+             const char* output_str = PyUnicode_AsUTF8(captured);
+             if (output_str && strlen(output_str) > 0) {
+                std::cout << output_str;  // Print to terminal
+-               rc.stdout = output_str;
++               rc.stdout_py = output_str;
+             }
+             Py_DECREF(captured);
+          }
+@@ -7354,7 +7354,7 @@
+          if (output_str && strlen(output_str) > 0) {
+             std::cout << output_str;  // Print to terminal
+             // You could also save to a file here if needed
+-            rc.stdout = output_str;
++            rc.stdout_py = output_str;
+          }
+          Py_DECREF(captured);
+       }
+diff -ruN a/src/json-rpc.cc b/src/json-rpc.cc
+--- a/src/json-rpc.cc
++++ b/src/json-rpc.cc
+@@ -525,8 +525,8 @@
+             std::string s = PyBytes_AS_STRING(PyUnicode_AsUTF8String(o));
+             json j_result;
+             j_result["value"] = s;
+-            if (!rrr.stdout.empty())
+-               j_result["stdout"] = rrr.stdout;
++            if (!rrr.stdout_py.empty())
++               j_result["stdout"] = rrr.stdout_py;
+             j_response["result"] = j_result;
+             Py_DECREF(o);  // Don't leak!
+          } else {
+diff -ruN a/src/python-results-container.hh b/src/python-results-container.hh
+--- a/src/python-results-container.hh
++++ b/src/python-results-container.hh
+@@ -6,7 +6,7 @@
+    public:
+    PyObject *result;
+    std::string error_message;
+-   std::string stdout;
++   std::string stdout_py;
+    execute_python_results_container_t() {
+       result = nullptr;
+    }

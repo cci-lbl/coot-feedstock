@@ -1,0 +1,67 @@
+diff -ruN a/src/startup.cc b/src/startup.cc
+--- a/src/startup.cc
++++ b/src/startup.cc
+@@ -25,6 +25,7 @@
+  */
+ 
+ #include <cstddef>
++#include <filesystem>
+ #include <iostream>
+ #include <string>
+ #include <gtk/gtk.h>
+@@ -33,6 +34,7 @@
+ #include <clipper/core/test_core.h>
+ #include <clipper/contrib/test_contrib.h>
+ 
++#include "gdk/gdkkeysyms.h"
+ #include "glib-object.h"
+ #include "glib.h"
+ #include "glibconfig.h"
+@@ -702,7 +704,11 @@
+              << keycode << std::endl;
+    GtkWidget *window = widget_from_builder("keyboard_go_to_residue_window");
+ 
++#ifdef WINDOWS_MINGW
++   if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter) {
++#else
+    if (keycode == 36) {
++#endif
+       std::string s = gtk_editable_get_text(GTK_EDITABLE(entry));
+       graphics_info_t g;
+       g.apply_go_to_residue_keyboading_string(s);
+@@ -710,7 +716,11 @@
+       gtk_widget_set_visible(GTK_WIDGET(window), FALSE);
+    }
+ 
++#ifdef WINDOWS_MINGW
++   if (keyval == GDK_KEY_Escape) {
++#else
+    if (keycode == 53) {
++#endif
+       gtk_widget_set_visible(GTK_WIDGET(window), FALSE);
+       gtk_editable_set_text(GTK_EDITABLE(entry), "");
+    }
+@@ -1204,6 +1214,10 @@
+       // context and orphaned every mesh's VAO - crashing the HUD instanced draws.
+ #ifdef HAVE_VTE
+       setup_python_vte_terminal();
++#else
++      // we want to disable the AI button in the in main window
++      GtkWidget *ai_button = widget_from_builder("claude_ai_button", builder);
++      gtk_widget_set_sensitive(ai_button, false);
+ #endif
+ 
+       gtk_window_present(GTK_WINDOW(app_window));
+@@ -1472,7 +1486,11 @@
+ 
+    // std::cout << "quit here" << std::endl;
+    // g_application_quit(self);
+-
++#ifdef WINDOWS_MINGW
++   g_application_quit(G_APPLICATION(self));
++   // BL says:: it doesnt quit but maybe not bad to call it anyway...
++   coot_save_state_and_exit(0, 0);
++#endif
+ }
+ 
+ int do_no_graphics_mode(command_line_data& cld, int argc, char** argv) {

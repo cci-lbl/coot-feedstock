@@ -79,8 +79,18 @@ source:
       - patches/coot-cmake-install-mcp.patch
       # Let the bridge import mcp 2.x (MCPServer) as well as 1.x (FastMCP).
       - patches/coot-mcp-bridge-mcp2.patch
-      # MinGW has no realpath(); use _fullpath() on every Windows toolchain.
-      - patches/coot-mingw-fullpath.patch
+      # MinGW port of the newer Coot code, taken from Bernhard Lohkamp's WinCoot
+      # branch (bernhardcl/coot, gtk4): POSIX headers, winsock for the JSON-RPC
+      # socket, std::filesystem::path to string conversions, LLP64 logging
+      # overloads, link flags, layla globals, and Windows startup behavior.
+      - patches/coot-mingw-posix-headers.patch  # [win]
+      - patches/coot-mingw-stdout-member.patch  # [win]
+      - patches/coot-mingw-path-to-string.patch  # [win]
+      - patches/coot-mingw-logging-overloads.patch  # [win]
+      - patches/coot-mingw-link-flags.patch  # [win]
+      - patches/coot-mingw-layla-globals.patch  # [win]
+      - patches/coot-mingw-coot-utils.patch  # [win]
+      - patches/coot-mingw-startup.patch  # [win]
 
 build:
   number: 0

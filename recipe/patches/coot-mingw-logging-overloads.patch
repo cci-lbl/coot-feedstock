@@ -1,0 +1,61 @@
+diff -ruN a/utils/logging.cc b/utils/logging.cc
+--- a/utils/logging.cc
++++ b/utils/logging.cc
+@@ -90,6 +90,12 @@
+    i = i_in;
+ }
+ 
++logging::ltw::ltw(const size_t &i_in) {
++   // slightly naughty
++   type = type_t::INT_TYPE;
++   i = i_in;
++}
++
+ logging::ltw::ltw(float f_in) {
+    type = type_t::FLOAT_TYPE;
+    f = f_in;
+@@ -359,6 +365,25 @@
+ 
+ void
+ logging::log(log_t type_in, const std::string &s1, unsigned int i, const std::string &s2) {
++
++   log_item l(type_in);
++   timeval current_time;
++   int success = gettimeofday(&current_time, NULL);
++   if (success == 0) // was successful
++      l.t = current_time.tv_sec;
++   l.message = s1;
++   l.message += " ";
++   l.message += std::to_string(i);
++   l.message += " ";
++   l.message += s2;
++   history.push_back(l);
++   output_to_terminal_maybe();
++   notify();
++
++}
++
++void
++logging::log(log_t type_in, const std::string &s1, unsigned long i, const std::string &s2) {
+ 
+    log_item l(type_in);
+    timeval current_time;
+diff -ruN a/utils/logging.hh b/utils/logging.hh
+--- a/utils/logging.hh
++++ b/utils/logging.hh
+@@ -70,6 +70,7 @@
+       ltw(const unsigned long &i);
+       ltw(float f);
+       ltw(const double &d);
++      ltw(const size_t &i);
+       std::string to_string() const;
+    };
+ 
+@@ -115,6 +116,7 @@
+    void log(log_t type_in, const std::string &s1, bool v1, const std::string &s2, const std::string &s3);
+    void log(log_t type_in, const std::string &s1, int, const std::string &s2);
+    void log(log_t type_in, const std::string &s1, unsigned int, const std::string &s2);
++   void log(log_t type_in, const std::string &s1, unsigned long, const std::string &s2);
+    void log(log_t type_in, const std::string &s1, std::size_t s, const std::string &s2);
+    void log(log_t type_in, const std::string &s1, double d, const std::string &s2);
+    void log(log_t type_in, const std::string &s1);
