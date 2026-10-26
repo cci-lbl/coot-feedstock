@@ -163,7 +163,7 @@ JAM
 $B2 -j "$CORES" toolset=gcc address-model=64 link=shared runtime-link=shared \
   variant=release threading=multi --layout=system \
   --with-python --with-thread --with-chrono --with-date_time --with-atomic \
-  --with-serialization --with-iostreams --with-regex --with-system \
+  --with-serialization --with-iostreams --with-regex \
   -sZLIB_INCLUDE="$LP_M/include" -sZLIB_LIBRARY_PATH="$LP_M/lib" -sZLIB_NAME=zlib \
   -sNO_ZSTD=1 -sNO_LZMA=1 -sNO_BZIP2=1 \
   --prefix="$LP_M" install
@@ -195,7 +195,7 @@ mkdir -p build && cd build
 cmake -G "MSYS Makefiles" \
   -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
-  -DCOORDGEN_BUILD_SHARED_LIBS=ON \
+  -DCOORDGEN_BUILD_SHARED_LIBS=ON -DCOORDGEN_RIGOROUS_BUILD=OFF \
   -DCOORDGEN_USE_MAEPARSER=ON -DCOORDGEN_BUILD_TESTS=OFF -DCOORDGEN_BUILD_EXAMPLE=OFF \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_PREFIX_PATH="$LP_M" -Dmaeparser_DIR="$LP_M/lib/cmake" \
@@ -222,6 +222,7 @@ cmake -G "MSYS Makefiles" \
   -DRDK_INSTALL_INTREE=OFF \
   -DRDK_INSTALL_STATIC_LIBS=OFF \
   -DRDK_BUILD_CPP_TESTS=OFF \
+  -DRDK_BUILD_DESCRIPTORS3D=OFF \
   -DRDK_OPTIMIZE_POPCNT=OFF \
   -DRDK_BUILD_INCHI_SUPPORT=OFF \
   -DRDK_BUILD_FREESASA_SUPPORT=OFF \
@@ -237,9 +238,12 @@ cmake -G "MSYS Makefiles" \
 make -j "$CORES"
 make install
 cd ..
-# rdkit installs DLLs to lib; and its install list omits a header that
-# BoundsMatrixBuilder.h includes (rdkit PR #9434).
-mv "$LP_U"/lib/libRDKit*.dll "$LP_U/bin/" 2>/dev/null || true
+# rdkit installs DLLs to lib. Windows loads from bin, but Coot's CMake build
+# consumes RDKit through its exported targets, whose config checks that the
+# lib paths exist, so copy now and drop the lib copies in the final strip.
+# The install list also omits a header that BoundsMatrixBuilder.h includes
+# (rdkit PR #9434).
+cp "$LP_U"/lib/libRDKit*.dll "$LP_U/bin/"
 cp Code/GraphMol/DistGeomHelpers/BoundsMatrixBuilderDetails.h "$LP_U/include/rdkit/GraphMol/DistGeomHelpers/"
 cd ..
 echo "rdkit DLLs:"
@@ -368,13 +372,21 @@ cp "$RECIPE_U/coot-deactivate.bat" "$PREFIX_U/etc/conda/deactivate.d/coot-deacti
 # The vendored C++ stack ships as DLLs only. Its headers, import and static
 # libraries, libtool and pkg-config files, and CMake configs would clobber
 # conda-forge's boost, rdkit, and gemmi packages in the same environment,
-# and nothing downstream consumes them.
+# and nothing downstream consumes them. Every .la goes: libtool files embed
+# the build-time /c/bld paths, which conda cannot relocate. The Unix shell
+# wrappers (bin/coot, bin/coot-mini-rsr, ...) are useless on Windows.
 echo "Removing vendored development files"
 rm -rf "$LP_U"/include/{boost,rdkit,gemmi,clipper,mmdb2,ssm,ccp4,maeparser,coordgen}
 rm -f  "$LP_U"/include/{fftw,rfftw,sfftw,srfftw,fftw_threads,rfftw_threads}.h
-rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen}*.{a,dll.a,la}
+rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen}*.{a,dll.a,dll}
+rm -f  "$LP_U"/lib/*.la
 rm -rf "$LP_U"/lib/cmake/{rdkit,maeparser,coordgen,Boost,boost_,RDKit}* "$LP_U"/cmake/gemmi*
 rm -f  "$LP_U"/lib/pkgconfig/{clipper,mmdb2,ssm,ccp4c,libccp4c,gemmi,fftw,rfftw,sfftw,srfftw}*.pc
-rm -rf "$LP_U"/lib/rdkit "$LP_U"/share/RDKit "$LP_U"/share/rdkit
+rm -rf "$LP_U"/lib/rdkit
+for f in "$LP_U"/bin/*; do
+  if [ -f "$f" ] && [ "$(head -c 2 "$f" 2>/dev/null)" = "#!" ]; then rm -f "$f"; fi
+done
+echo "Library/bin after strip:"
+ls "$LP_U/bin" | grep -iE "coot|RDKit|boost|gemmi|clipper|mmdb|ssm|ccp4|fftw" | head -60
 echo
 echo "Done"
