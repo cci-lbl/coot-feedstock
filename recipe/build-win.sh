@@ -102,7 +102,10 @@ echo "Building libccp4"
 echo "================"
 cd libccp4
 patch -p1 < "$RECIPE_U/patches/libccp4-mingw-stdint.patch"
-CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types" \
+# libccp4 declares putenv() and friends K&R style; under GCC 15's C23
+# default an empty parameter list means (void) and conflicts with the
+# MinGW prototypes, so build it as C17.
+CFLAGS="${CFLAGS:-} -std=gnu17 -Wno-error=incompatible-pointer-types" \
   ./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --disable-fortran
 make -j "$CORES"
 make install
