@@ -1,0 +1,18 @@
+Include stdint.h unconditionally in cmtzlib.c.
+
+cmtzlib.c uses int32_t and int64_t but only includes stdint.h under
+_MSC_VER; glibc and macOS headers provide the types transitively, the
+MinGW-w64 headers do not.
+
+--- a/ccp4/cmtzlib.c
++++ b/ccp4/cmtzlib.c
+@@ -23,9 +23,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
+-#ifdef _MSC_VER
+ #include <stdint.h>
+-#endif
+ #include <math.h>
+ #include "cmtzlib.h"
+ #include "ccp4_types.h"
