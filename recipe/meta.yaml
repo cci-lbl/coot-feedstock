@@ -167,6 +167,13 @@ requirements:
     - libboost-devel  # [not win]
     - libcurl
     - libgl-devel  # [linux]
+    # The MinGW runtime must sit in the host env's Library/bin: the CMake
+    # build imports the nanobind module with conda's python to write the
+    # stub, and that python resolves DLLs only under its own prefix.
+    - libgcc  # [win]
+    - libgomp  # [win]
+    - libstdcxx  # [win]
+    - libwinpthread  # [win]
     - libgraphene
     - libopenblas
     - libpng
