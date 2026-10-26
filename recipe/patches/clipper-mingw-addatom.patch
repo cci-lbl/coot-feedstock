@@ -1,0 +1,22 @@
+Undefine the AddAtom macro from windows.h in minimol_io.cpp.
+
+clipper_sysdep.h includes windows.h for threading on Windows, and
+windows.h defines AddAtom as a macro, which rewrites the
+MMonomer::AddAtom calls in this file. Equivalent of the minimol_io
+hunk in WinCoot's clipper_mingw.patch.
+
+--- a/clipper/minimol/minimol_io.cpp
++++ b/clipper/minimol/minimol_io.cpp
+@@ -45,6 +45,12 @@
+ #include <sstream>
+ extern "C" {
+ #include <string.h>
++
++// windows.h, pulled in through clipper_sysdep.h for threading on
++// Windows, defines AddAtom as a macro and breaks the AddAtom calls below.
++#ifdef AddAtom
++#undef AddAtom
++#endif
+ }
+ 
+ 
