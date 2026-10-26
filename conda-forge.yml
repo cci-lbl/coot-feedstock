@@ -10,8 +10,14 @@ github:
   branch_name: main
   tooling_branch_name: main
 provider:
-  linux_aarch64: native
-  osx_arm64: github_actions
+  # win2 branch: only win_64 builds while the Windows port is iterated.
+  # Restore linux_64 (default), linux_aarch64: native, osx_64 (default),
+  # and osx_arm64: github_actions before merging.
+  linux_64: None
+  linux_aarch64: None
+  osx_64: None
+  osx_arm64: None
+  win_64: github_actions
 test: native
 upload_on_branch: main
 workflow_settings:
