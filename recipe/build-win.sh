@@ -51,6 +51,24 @@ for pair in "gcc:$CC" "g++:$CXX" "cc:$CC" "c++:$CXX"; do
 done
 export PATH="$SHIMS:$PATH"
 
+# Coot's libcurl.m4 only recognizes curl through curl-config, which
+# conda-forge's win-64 libcurl does not ship. Answer from curlver.h.
+CURL_VER=$(sed -n 's/^#define LIBCURL_VERSION "\([^"]*\)".*/\1/p' "$LP_U/include/curl/curlver.h")
+CURL_VERNUM=$(sed -n 's/^#define LIBCURL_VERSION_NUM *0x\([0-9a-fA-F]*\).*/\1/p' "$LP_U/include/curl/curlver.h")
+cat > "$SHIMS/curl-config" <<EOF
+#!/bin/sh
+for a in "\$@"; do
+  case "\$a" in
+    --version) echo "libcurl $CURL_VER" ;;
+    --vernum) echo "$CURL_VERNUM" ;;
+    --cflags) echo "-I$LP_M/include" ;;
+    --libs) echo "-L$LP_M/lib -lcurl" ;;
+  esac
+done
+EOF
+chmod +x "$SHIMS/curl-config"
+echo "curl-config shim: $("$SHIMS/curl-config" --version) $("$SHIMS/curl-config" --vernum)"
+
 export CPPFLAGS="-I$LP_U/include ${CPPFLAGS:-}"
 export LDFLAGS="-L$LP_U/lib ${LDFLAGS:-}"
 export PKG_CONFIG_PATH="$LP_U/lib/pkgconfig:$LP_U/share/pkgconfig"
@@ -294,6 +312,21 @@ echo "gemmi DLLs:"
 ls "$LP_U/bin" | grep -i gemmi || true
 echo
 
+echo "Building glob"
+echo "============="
+# mingw-w64 has no glob.h, and Coot's WINDOWS_MINGW code still calls
+# glob(), so build the GNU glob that WinCoot uses as a DLL. Its configure
+# predates config.sub, so it takes no --host.
+cd glob
+CC="$CC" CFLAGS="-O2 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" ./configure --prefix="$LP_U"
+make
+$CC -shared -o libglob.dll *.o -Wl,--out-implib,libglob.dll.a
+cp glob.h "$LP_U/include/"
+cp libglob.dll "$LP_U/bin/"
+cp libglob.dll.a "$LP_U/lib/"
+cd ..
+echo
+
 echo "Building coot"
 echo "============="
 cd coot
@@ -316,8 +349,7 @@ if [ -e config.guess ] ; then rm config.guess ; fi
   --with-gemmi="$LP_U" \
   --with-glm="$LP_U" \
   --with-rdkit-prefix="$LP_U" \
-  --with-glib-prefix="$LP_U" \
-  --with-gtk-prefix="$LP_U" \
+  --with-glob-prefix="$LP_U" \
   PYTHON="$PREFIX_M/python.exe" \
   PYTHON_CPPFLAGS="-I$PREFIX_M/include" \
   PYTHON_LIBS="-L$PREFIX_M/libs -lpython$PY_VER_NODOT" \
@@ -391,8 +423,8 @@ cp "$RECIPE_U/coot-deactivate.bat" "$PREFIX_U/etc/conda/deactivate.d/coot-deacti
 # wrappers (bin/coot, bin/coot-mini-rsr, ...) are useless on Windows.
 echo "Removing vendored development files"
 rm -rf "$LP_U"/include/{boost,rdkit,gemmi,clipper,mmdb2,ssm,ccp4,maeparser,coordgen}
-rm -f  "$LP_U"/include/{fftw,rfftw,sfftw,srfftw,fftw_threads,rfftw_threads}.h
-rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen}*.{a,dll.a,dll}
+rm -f  "$LP_U"/include/{fftw,rfftw,sfftw,srfftw,fftw_threads,rfftw_threads,glob}.h
+rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen,glob}*.{a,dll.a,dll}
 rm -f  "$LP_U"/lib/*.la
 rm -rf "$LP_U"/lib/cmake/{rdkit,maeparser,coordgen,Boost,boost_,RDKit}* "$LP_U"/cmake/gemmi*
 rm -f  "$LP_U"/lib/pkgconfig/{clipper,mmdb2,ssm,ccp4c,libccp4c,gemmi,fftw,rfftw,sfftw,srfftw}*.pc
