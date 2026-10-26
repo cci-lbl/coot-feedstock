@@ -72,10 +72,14 @@ source:
       - patches/coot-cmake-install-mcp.patch
       # Let the bridge import mcp 2.x (MCPServer) as well as 1.x (FastMCP).
       - patches/coot-mcp-bridge-mcp2.patch
+      # MinGW has no realpath(); use _fullpath() on every Windows toolchain.
+      - patches/coot-mingw-fullpath.patch
 
 build:
   number: 0
   skip: True  # [py<311]
+  # win2 branch: iterate on one Python version; drop before merge.
+  skip: True  # [win and py != 312]
   # ignore_run_exports:
   #   - expat
   #   - gemmi
@@ -140,6 +144,7 @@ requirements:
   host:
     - cairo
     - doxygen
+    - eigen  # [win]
     - epoxy
     - expat
     - fast_float  # [not win]
@@ -188,8 +193,12 @@ requirements:
     - librdkit  # [not win]
     # MinGW runtime for the GCC-built Coot and its vendored C++ stack.
     - libgcc  # [win]
+    - libgomp  # [win]
     - libstdcxx  # [win]
     - libwinpthread  # [win]
+    # gtk4 on win-64 ships schema XML but no gschemas.compiled and no
+    # post-link; post-link.bat compiles them with glib-compile-schemas.
+    - glib-tools  # [win]
 
 test:
   # Some packages might need a `test/commands` key to check CLI.
@@ -205,6 +214,10 @@ test:
   commands:
     - ls  # [unix]
     - dir  # [win]
+    # Windows: the GUI build installs mini-rsr-bin.exe to Library/bin, and
+    # the CMake build's nanobind module must import against conda's python.
+    - mini-rsr-bin --help  # [win]
+    - python -c "import coot_headless_api"  # [win]
 
 about:
   home: https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/
