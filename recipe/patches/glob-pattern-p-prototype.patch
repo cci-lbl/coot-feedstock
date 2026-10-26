@@ -1,0 +1,17 @@
+--- a/glob.c
++++ b/glob.c
+@@ -299,12 +299,11 @@
+ static int prefix_array __P ((const char *prefix, char **array, size_t n));
+ static int collated_compare __P ((const __ptr_t, const __ptr_t));
+ 
+-#ifdef VMS
+-/* these compilers like prototypes */
++/* Declare the prototype before the first use: C99 and later reject
++   implicit function declarations.  */
+ #if !defined _LIBC || !defined NO_GLOB_PATTERN_P
+ int __glob_pattern_p (const char *pattern, int quote);
+ #endif
+-#endif
+ 
+ /* Find the end of the sub-pattern in a brace expression.  We define
+    this as an inline function if the compiler permits.  */

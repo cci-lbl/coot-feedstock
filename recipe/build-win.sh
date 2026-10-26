@@ -316,9 +316,11 @@ echo "Building glob"
 echo "============="
 # mingw-w64 has no glob.h, and Coot's WINDOWS_MINGW code still calls
 # glob(), so build the GNU glob that WinCoot uses as a DLL. Its configure
-# predates config.sub, so it takes no --host.
+# predates config.sub, so it takes no --host. The 2002 source declares
+# malloc() and friends K&R style when STDC_HEADERS is unset, and its
+# configure fails that probe here, so force the ANSI path and C17.
 cd glob
-CC="$CC" CFLAGS="-O2 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" ./configure --prefix="$LP_U"
+CC="$CC" CFLAGS="-O2 -std=gnu17 -DSTDC_HEADERS=1 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" ./configure --prefix="$LP_U"
 make
 $CC -shared -o libglob.dll *.o -Wl,--out-implib,libglob.dll.a
 cp glob.h "$LP_U/include/"
