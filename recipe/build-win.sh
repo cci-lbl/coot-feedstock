@@ -101,6 +101,7 @@ echo
 echo "Building libccp4"
 echo "================"
 cd libccp4
+patch -p1 < "$RECIPE_U/patches/libccp4-mingw-stdint.patch"
 CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types" \
   ./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --disable-fortran
 make -j "$CORES"
@@ -135,6 +136,57 @@ cp "$LP_U/lib/pkgconfig/ccp4c.pc" "$LP_U/lib/pkgconfig/libccp4c.pc"
 ls "$LP_U/bin" | grep -iE "fftw|mmdb|ssm|ccp4|clipper" || true
 
 echo "Building boost"
+echo "=============="
+cd boost
+PY_VER_NODOT=${PY_VER//./}
+PREFIX_M=$(cygpath -m "$PREFIX")
+cat > user-config.jam <<JAM
+using gcc : : $CXX ;
+using python : $PY_VER : $PREFIX_M/python.exe : $PREFIX_M/include : $PREFIX_M/libs ;
+JAM
+./bootstrap.sh --with-toolset=gcc --prefix="$LP_U" --with-python="$PREFIX_M/python.exe"
+./b2 -j "$CORES" --user-config=user-config.jam toolset=gcc address-model=64 \
+  link=shared runtime-link=shared variant=release threading=multi --layout=system \
+  --with-python --with-thread --with-chrono --with-date_time --with-atomic \
+  --with-serialization --with-iostreams --with-regex --with-system \
+  -sNO_ZSTD=1 -sNO_LZMA=1 -sNO_BZIP2=1 \
+  --prefix="$LP_U" install
+cd ..
+ls "$LP_U/bin" | grep -i boost || true
+echo
+
+echo "Building maeparser"
+echo "=================="
+cd maeparser
+mkdir -p build && cd build
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DMAEPARSER_BUILD_SHARED_LIBS=ON -DMAEPARSER_BUILD_TESTS=OFF \
+  -DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT="$LP_M" ..
+make -j "$CORES"
+make install
+cd ../..
+echo
+
+echo "Building coordgenlibs"
+echo "====================="
+cd coordgenlibs
+mkdir -p build && cd build
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DCOORDGEN_BUILD_SHARED_LIBS=ON \
+  -DCOORDGEN_USE_MAEPARSER=ON -DCOORDGEN_BUILD_TESTS=OFF -DCOORDGEN_BUILD_EXAMPLE=OFF \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_PREFIX_PATH="$LP_M" -Dmaeparser_DIR="$LP_M/lib/cmake/maeparser" \
+  -DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT="$LP_M" ..
+make -j "$CORES"
+make install
+cd ../..
+echo
+
+echo "Building rdkit"
 echo "=============="
 echo "Stopping here: later stages are added task by task on the win2 branch."
 exit 0
