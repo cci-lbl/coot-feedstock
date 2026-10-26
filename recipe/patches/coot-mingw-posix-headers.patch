@@ -1,6 +1,6 @@
-diff -ruN a/MoleculesToTriangles/CXXClasses/DishyBase.h b/MoleculesToTriangles/CXXClasses/DishyBase.h
---- a/MoleculesToTriangles/CXXClasses/DishyBase.h
-+++ b/MoleculesToTriangles/CXXClasses/DishyBase.h
+diff -ruN a/coot/MoleculesToTriangles/CXXClasses/DishyBase.h b/coot/MoleculesToTriangles/CXXClasses/DishyBase.h
+--- a/coot/MoleculesToTriangles/CXXClasses/DishyBase.h
++++ b/coot/MoleculesToTriangles/CXXClasses/DishyBase.h
 @@ -26,6 +26,7 @@
  #define DISHY_BASE_H
  
@@ -9,9 +9,9 @@ diff -ruN a/MoleculesToTriangles/CXXClasses/DishyBase.h b/MoleculesToTriangles/C
  #include <clipper/core/clipper_types.h>
  #include <mmdb2/mmdb_manager.h>
  #include "MoleculesToTriangles/CXXSurface/CXXCoord.h"
-diff -ruN a/compat/coot-sysdep.h b/compat/coot-sysdep.h
---- a/compat/coot-sysdep.h
-+++ b/compat/coot-sysdep.h
+diff -ruN a/coot/compat/coot-sysdep.h b/coot/compat/coot-sysdep.h
+--- a/coot/compat/coot-sysdep.h
++++ b/coot/compat/coot-sysdep.h
 @@ -43,6 +43,10 @@
  #ifdef PLANE
  #undef PLANE
@@ -23,9 +23,9 @@ diff -ruN a/compat/coot-sysdep.h b/compat/coot-sysdep.h
  // for nomenclature errors
  #ifdef IGNORE
  #undef IGNORE
-diff -ruN a/coords/Bond_lines.cc b/coords/Bond_lines.cc
---- a/coords/Bond_lines.cc
-+++ b/coords/Bond_lines.cc
+diff -ruN a/coot/coords/Bond_lines.cc b/coot/coords/Bond_lines.cc
+--- a/coot/coords/Bond_lines.cc
++++ b/coot/coords/Bond_lines.cc
 @@ -30,6 +30,7 @@
  #include <set>
  #include <iterator>
@@ -34,9 +34,9 @@ diff -ruN a/coords/Bond_lines.cc b/coords/Bond_lines.cc
  #include "Cartesian.hh"
  #include <mmdb2/mmdb_manager.h>
  #include "mmdb-extras.hh"
-diff -ruN a/coot-utils/coot-coord-utils.hh b/coot-utils/coot-coord-utils.hh
---- a/coot-utils/coot-coord-utils.hh
-+++ b/coot-utils/coot-coord-utils.hh
+diff -ruN a/coot/coot-utils/coot-coord-utils.hh b/coot/coot-utils/coot-coord-utils.hh
+--- a/coot/coot-utils/coot-coord-utils.hh
++++ b/coot/coot-utils/coot-coord-utils.hh
 @@ -39,6 +39,8 @@
  
  #include <map>
@@ -46,9 +46,9 @@ diff -ruN a/coot-utils/coot-coord-utils.hh b/coot-utils/coot-coord-utils.hh
  #include <mmdb2/mmdb_manager.h>
  #include <clipper/core/coords.h>
  
-diff -ruN a/coot-utils/coot-map-utils.cc b/coot-utils/coot-map-utils.cc
---- a/coot-utils/coot-map-utils.cc
-+++ b/coot-utils/coot-map-utils.cc
+diff -ruN a/coot/coot-utils/coot-map-utils.cc b/coot/coot-utils/coot-map-utils.cc
+--- a/coot/coot-utils/coot-map-utils.cc
++++ b/coot/coot-utils/coot-map-utils.cc
 @@ -30,6 +30,8 @@
  
  #include <gsl/gsl_sf_bessel.h>
@@ -58,9 +58,9 @@ diff -ruN a/coot-utils/coot-map-utils.cc b/coot-utils/coot-map-utils.cc
  #include "clipper/core/coords.h"
  #include "clipper/core/map_interp.h"
  #include "clipper/core/hkl_compute.h"
-diff -ruN a/coot-utils/coot-map-utils.hh b/coot-utils/coot-map-utils.hh
---- a/coot-utils/coot-map-utils.hh
-+++ b/coot-utils/coot-map-utils.hh
+diff -ruN a/coot/coot-utils/coot-map-utils.hh b/coot/coot-utils/coot-map-utils.hh
+--- a/coot/coot-utils/coot-map-utils.hh
++++ b/coot/coot-utils/coot-map-utils.hh
 @@ -25,6 +25,7 @@
  
  #include <map>
@@ -69,9 +69,9 @@ diff -ruN a/coot-utils/coot-map-utils.hh b/coot-utils/coot-map-utils.hh
  #include <clipper/core/coords.h>
  #include <clipper/core/xmap.h>
  #include <clipper/core/hkl_data.h>
-diff -ruN a/coot-utils/merge-atom-selections.cc b/coot-utils/merge-atom-selections.cc
---- a/coot-utils/merge-atom-selections.cc
-+++ b/coot-utils/merge-atom-selections.cc
+diff -ruN a/coot/coot-utils/merge-atom-selections.cc b/coot/coot-utils/merge-atom-selections.cc
+--- a/coot/coot-utils/merge-atom-selections.cc
++++ b/coot/coot-utils/merge-atom-selections.cc
 @@ -29,6 +29,8 @@
  #include <queue>
  #include <algorithm>
@@ -81,9 +81,9 @@ diff -ruN a/coot-utils/merge-atom-selections.cc b/coot-utils/merge-atom-selectio
  #include <clipper/core/coords.h>
  
  #include "utils/coot-utils.hh"
-diff -ruN a/coot-utils/pepflip-using-difference-map.hh b/coot-utils/pepflip-using-difference-map.hh
---- a/coot-utils/pepflip-using-difference-map.hh
-+++ b/coot-utils/pepflip-using-difference-map.hh
+diff -ruN a/coot/coot-utils/pepflip-using-difference-map.hh b/coot/coot-utils/pepflip-using-difference-map.hh
+--- a/coot/coot-utils/pepflip-using-difference-map.hh
++++ b/coot/coot-utils/pepflip-using-difference-map.hh
 @@ -25,6 +25,7 @@
   */
  
@@ -92,9 +92,9 @@ diff -ruN a/coot-utils/pepflip-using-difference-map.hh b/coot-utils/pepflip-usin
  #include <clipper/core/coords.h>
  #include <clipper/core/xmap.h>
  
-diff -ruN a/geometry/protein-geometry.hh b/geometry/protein-geometry.hh
---- a/geometry/protein-geometry.hh
-+++ b/geometry/protein-geometry.hh
+diff -ruN a/coot/geometry/protein-geometry.hh b/coot/geometry/protein-geometry.hh
+--- a/coot/geometry/protein-geometry.hh
++++ b/coot/geometry/protein-geometry.hh
 @@ -55,6 +55,8 @@
  
  #include "energy-lib.hh"
@@ -104,9 +104,9 @@ diff -ruN a/geometry/protein-geometry.hh b/geometry/protein-geometry.hh
  #include "clipper/core/coords.h"
  
  #include "hb-types.hh"
-diff -ruN a/ligand/molecular-replacement.cc b/ligand/molecular-replacement.cc
---- a/ligand/molecular-replacement.cc
-+++ b/ligand/molecular-replacement.cc
+diff -ruN a/coot/ligand/molecular-replacement.cc b/coot/ligand/molecular-replacement.cc
+--- a/coot/ligand/molecular-replacement.cc
++++ b/coot/ligand/molecular-replacement.cc
 @@ -27,6 +27,7 @@
  #include <algorithm>
  #include <thread>
@@ -115,9 +115,9 @@ diff -ruN a/ligand/molecular-replacement.cc b/ligand/molecular-replacement.cc
  #include <clipper/core/xmap.h>
  #include <clipper/core/map_utils.h>
  #include <clipper/core/map_interp.h>
-diff -ruN a/src/Mesh-from-graphical-bonds.cc b/src/Mesh-from-graphical-bonds.cc
---- a/src/Mesh-from-graphical-bonds.cc
-+++ b/src/Mesh-from-graphical-bonds.cc
+diff -ruN a/coot/src/Mesh-from-graphical-bonds.cc b/coot/src/Mesh-from-graphical-bonds.cc
+--- a/coot/src/Mesh-from-graphical-bonds.cc
++++ b/coot/src/Mesh-from-graphical-bonds.cc
 @@ -30,6 +30,8 @@
  #define GLM_ENABLE_EXPERIMENTAL
  #include <glm/gtx/string_cast.hpp>  // to_string()
@@ -127,9 +127,9 @@ diff -ruN a/src/Mesh-from-graphical-bonds.cc b/src/Mesh-from-graphical-bonds.cc
  #include "Mesh.hh"
  #include "bond-colour-mode.hh"
  #include "coot-utils/oct.hh"
-diff -ruN a/src/c-interface.cc b/src/c-interface.cc
---- a/src/c-interface.cc
-+++ b/src/c-interface.cc
+diff -ruN a/coot/src/c-interface.cc b/coot/src/c-interface.cc
+--- a/coot/src/c-interface.cc
++++ b/coot/src/c-interface.cc
 @@ -9455,8 +9455,12 @@
  /* section Remote Control */
  
@@ -143,9 +143,9 @@ diff -ruN a/src/c-interface.cc b/src/c-interface.cc
  #include <unistd.h>
  #include <cstring>
  #include <iostream>
-diff -ruN a/src/json-rpc.cc b/src/json-rpc.cc
---- a/src/json-rpc.cc
-+++ b/src/json-rpc.cc
+diff -ruN a/coot/src/json-rpc.cc b/coot/src/json-rpc.cc
+--- a/coot/src/json-rpc.cc
++++ b/coot/src/json-rpc.cc
 @@ -7,7 +7,11 @@
  #include <thread>
  
@@ -360,9 +360,9 @@ diff -ruN a/src/json-rpc.cc b/src/json-rpc.cc
     // Always return 1 (TRUE) to keep idle handler running
     return 1;
  
-diff -ruN a/utils/logging.hh b/utils/logging.hh
---- a/utils/logging.hh
-+++ b/utils/logging.hh
+diff -ruN a/coot/utils/logging.hh b/coot/utils/logging.hh
+--- a/coot/utils/logging.hh
++++ b/coot/utils/logging.hh
 @@ -28,6 +28,8 @@
  #include <vector>
  #include <fstream>
@@ -372,9 +372,9 @@ diff -ruN a/utils/logging.hh b/utils/logging.hh
  #ifdef _MSC_VER
  #undef WARNING
  #undef ERROR
-diff -ruN a/utils/subprocess.hpp b/utils/subprocess.hpp
---- a/utils/subprocess.hpp
-+++ b/utils/subprocess.hpp
+diff -ruN a/coot/utils/subprocess.hpp b/coot/utils/subprocess.hpp
+--- a/coot/utils/subprocess.hpp
++++ b/coot/utils/subprocess.hpp
 @@ -65,9 +65,11 @@
    #include <io.h>
    #include <cwchar>
@@ -387,9 +387,9 @@ diff -ruN a/utils/subprocess.hpp b/utils/subprocess.hpp
  #else
    #include <sys/wait.h>
    #include <unistd.h>
-diff -ruN a/utils/xdg-base.hh b/utils/xdg-base.hh
---- a/utils/xdg-base.hh
-+++ b/utils/xdg-base.hh
+diff -ruN a/coot/utils/xdg-base.hh b/coot/utils/xdg-base.hh
+--- a/coot/utils/xdg-base.hh
++++ b/coot/utils/xdg-base.hh
 @@ -24,7 +24,7 @@
  #define UTILS_XDG_BASE_HH
  

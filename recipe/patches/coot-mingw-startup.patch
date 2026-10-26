@@ -1,6 +1,6 @@
-diff -ruN a/src/startup.cc b/src/startup.cc
---- a/src/startup.cc
-+++ b/src/startup.cc
+diff -ruN a/coot/src/startup.cc b/coot/src/startup.cc
+--- a/coot/src/startup.cc
++++ b/coot/src/startup.cc
 @@ -25,6 +25,7 @@
   */
  

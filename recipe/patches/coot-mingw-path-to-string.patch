@@ -1,6 +1,6 @@
-diff -ruN a/src/c-interface-network.cc b/src/c-interface-network.cc
---- a/src/c-interface-network.cc
-+++ b/src/c-interface-network.cc
+diff -ruN a/coot/src/c-interface-network.cc b/coot/src/c-interface-network.cc
+--- a/coot/src/c-interface-network.cc
++++ b/coot/src/c-interface-network.cc
 @@ -904,11 +904,11 @@
     // COD cifs are SHELX-style: as well as the model, make maps from the
     // embedded reflections (read_small_molecule_cif_and_make_map()).
@@ -31,9 +31,9 @@ diff -ruN a/src/c-interface-network.cc b/src/c-interface-network.cc
                 std::string message = std::string("Failed to download ") + cif_file_path.string() +
                    std::string(" from github monomers");
                 info_dialog(message.c_str());
-diff -ruN a/src/glade-callbacks-main-window.cc b/src/glade-callbacks-main-window.cc
---- a/src/glade-callbacks-main-window.cc
-+++ b/src/glade-callbacks-main-window.cc
+diff -ruN a/coot/src/glade-callbacks-main-window.cc b/coot/src/glade-callbacks-main-window.cc
+--- a/coot/src/glade-callbacks-main-window.cc
++++ b/coot/src/glade-callbacks-main-window.cc
 @@ -1553,7 +1553,7 @@
           std::filesystem::create_directory(save_dir);
        std::string s = g.molecules[imol].stripped_save_name_suggestion();
@@ -43,9 +43,9 @@ diff -ruN a/src/glade-callbacks-main-window.cc b/src/glade-callbacks-main-window
     }
  }
  
-diff -ruN a/src/gphl-screen.cc b/src/gphl-screen.cc
---- a/src/gphl-screen.cc
-+++ b/src/gphl-screen.cc
+diff -ruN a/coot/src/gphl-screen.cc b/coot/src/gphl-screen.cc
+--- a/coot/src/gphl-screen.cc
++++ b/coot/src/gphl-screen.cc
 @@ -1441,7 +1441,7 @@
     std::filesystem::path mtz("refine.mtz");
  
@@ -55,9 +55,9 @@ diff -ruN a/src/gphl-screen.cc b/src/gphl-screen.cc
        set_show_symmetry_master(1);
     }
  
-diff -ruN a/src/startup.cc b/src/startup.cc
---- a/src/startup.cc
-+++ b/src/startup.cc
+diff -ruN a/coot/src/startup.cc b/coot/src/startup.cc
+--- a/coot/src/startup.cc
++++ b/coot/src/startup.cc
 @@ -778,7 +778,7 @@
     for (const auto &script : py_config_scripts) {
        // std::cout << "Load python config script " << script.c_str() << std::endl;

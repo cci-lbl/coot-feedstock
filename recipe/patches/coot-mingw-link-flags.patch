@@ -1,6 +1,6 @@
-diff -ruN a/api/Makefile.am b/api/Makefile.am
---- a/api/Makefile.am
-+++ b/api/Makefile.am
+diff -ruN a/coot/api/Makefile.am b/coot/api/Makefile.am
+--- a/coot/api/Makefile.am
++++ b/coot/api/Makefile.am
 @@ -95,7 +95,7 @@
     $(top_builddir)/mini-mol/libcoot-mini-mol.la       \
     $(top_builddir)/coords/libcoot-coords.la	      \
@@ -10,9 +10,9 @@ diff -ruN a/api/Makefile.am b/api/Makefile.am
  
  check_PROGRAMS = test-molecules-container
  
-diff -ruN a/layla/Makefile.am b/layla/Makefile.am
---- a/layla/Makefile.am
-+++ b/layla/Makefile.am
+diff -ruN a/coot/layla/Makefile.am b/coot/layla/Makefile.am
+--- a/coot/layla/Makefile.am
++++ b/coot/layla/Makefile.am
 @@ -81,7 +81,12 @@
  
  dist_bin_SCRIPTS = layla
@@ -26,9 +26,9 @@ diff -ruN a/layla/Makefile.am b/layla/Makefile.am
  
  layla_bin_SOURCES = main.cpp
  
-diff -ruN a/macros/coot-windows.m4 b/macros/coot-windows.m4
---- a/macros/coot-windows.m4
-+++ b/macros/coot-windows.m4
+diff -ruN a/coot/macros/coot-windows.m4 b/coot/macros/coot-windows.m4
+--- a/coot/macros/coot-windows.m4
++++ b/coot/macros/coot-windows.m4
 @@ -39,10 +39,10 @@
    *-mingw*)
      COOT_WINDOWS_CFLAGS="-DWINDOWS_MINGW -DUSE_GNOME_CANVAS -D_USE_MATH_DEFINES"
@@ -42,9 +42,9 @@ diff -ruN a/macros/coot-windows.m4 b/macros/coot-windows.m4
      fi
      have_windows_mingw=yes
      windows=true
-diff -ruN a/src/Makefile.am b/src/Makefile.am
---- a/src/Makefile.am
-+++ b/src/Makefile.am
+diff -ruN a/coot/src/Makefile.am b/coot/src/Makefile.am
+--- a/coot/src/Makefile.am
++++ b/coot/src/Makefile.am
 @@ -926,11 +926,15 @@
  
  # coot_bin_LDFLAGS = -static -lstdc++

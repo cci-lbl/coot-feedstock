@@ -1,6 +1,6 @@
-diff -ruN a/layla/layla_embedded.cpp b/layla/layla_embedded.cpp
---- a/layla/layla_embedded.cpp
-+++ b/layla/layla_embedded.cpp
+diff -ruN a/coot/layla/layla_embedded.cpp b/coot/layla/layla_embedded.cpp
+--- a/coot/layla/layla_embedded.cpp
++++ b/coot/layla/layla_embedded.cpp
 @@ -26,6 +26,11 @@
  
  using namespace coot::layla;
@@ -13,9 +13,9 @@ diff -ruN a/layla/layla_embedded.cpp b/layla/layla_embedded.cpp
  bool coot::is_layla_initialized() {
      return coot::layla::global_layla_gtk_builder != nullptr;
  }
-diff -ruN a/layla/main.cpp b/layla/main.cpp
---- a/layla/main.cpp
-+++ b/layla/main.cpp
+diff -ruN a/coot/layla/main.cpp b/coot/layla/main.cpp
+--- a/coot/layla/main.cpp
++++ b/coot/layla/main.cpp
 @@ -35,6 +35,10 @@
  
      using namespace coot::layla;
@@ -27,9 +27,9 @@ diff -ruN a/layla/main.cpp b/layla/main.cpp
      // std::thread python_init_thread([argc,argv](){
      //     setup_python_basic(argc, argv);
      //     setup_python_module("coot");
-diff -ruN a/layla/state.hpp b/layla/state.hpp
---- a/layla/state.hpp
-+++ b/layla/state.hpp
+diff -ruN a/coot/layla/state.hpp b/coot/layla/state.hpp
+--- a/coot/layla/state.hpp
++++ b/coot/layla/state.hpp
 @@ -132,12 +132,22 @@
  
  /// Let this be the singleton used by the editor executable.

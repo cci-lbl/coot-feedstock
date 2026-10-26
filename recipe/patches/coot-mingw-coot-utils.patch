@@ -1,6 +1,6 @@
-diff -ruN a/utils/coot-utils.cc b/utils/coot-utils.cc
---- a/utils/coot-utils.cc
-+++ b/utils/coot-utils.cc
+diff -ruN a/coot/utils/coot-utils.cc b/coot/utils/coot-utils.cc
+--- a/coot/utils/coot-utils.cc
++++ b/coot/utils/coot-utils.cc
 @@ -47,6 +47,7 @@
  #include <unistd.h>
  #include <pwd.h>
@@ -110,9 +110,9 @@ diff -ruN a/utils/coot-utils.cc b/utils/coot-utils.cc
 +   return status;
 +}
 +
-diff -ruN a/utils/coot-utils.hh b/utils/coot-utils.hh
---- a/utils/coot-utils.hh
-+++ b/utils/coot-utils.hh
+diff -ruN a/coot/utils/coot-utils.hh b/coot/utils/coot-utils.hh
+--- a/coot/utils/coot-utils.hh
++++ b/coot/utils/coot-utils.hh
 @@ -35,6 +35,10 @@
  
     std::string get_home_dir();

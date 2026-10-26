@@ -1,6 +1,6 @@
-diff -ruN a/utils/logging.cc b/utils/logging.cc
---- a/utils/logging.cc
-+++ b/utils/logging.cc
+diff -ruN a/coot/utils/logging.cc b/coot/utils/logging.cc
+--- a/coot/utils/logging.cc
++++ b/coot/utils/logging.cc
 @@ -90,6 +90,12 @@
     i = i_in;
  }
@@ -40,9 +40,9 @@ diff -ruN a/utils/logging.cc b/utils/logging.cc
  
     log_item l(type_in);
     timeval current_time;
-diff -ruN a/utils/logging.hh b/utils/logging.hh
---- a/utils/logging.hh
-+++ b/utils/logging.hh
+diff -ruN a/coot/utils/logging.hh b/coot/utils/logging.hh
+--- a/coot/utils/logging.hh
++++ b/coot/utils/logging.hh
 @@ -70,6 +70,7 @@
        ltw(const unsigned long &i);
        ltw(float f);

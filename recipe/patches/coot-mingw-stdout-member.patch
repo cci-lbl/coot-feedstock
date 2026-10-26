@@ -1,6 +1,6 @@
-diff -ruN a/src/c-interface.cc b/src/c-interface.cc
---- a/src/c-interface.cc
-+++ b/src/c-interface.cc
+diff -ruN a/coot/src/c-interface.cc b/coot/src/c-interface.cc
+--- a/coot/src/c-interface.cc
++++ b/coot/src/c-interface.cc
 @@ -7194,7 +7194,7 @@
              const char* output_str = PyUnicode_AsUTF8(captured);
              if (output_str && strlen(output_str) > 0) {
@@ -28,9 +28,9 @@ diff -ruN a/src/c-interface.cc b/src/c-interface.cc
           }
           Py_DECREF(captured);
        }
-diff -ruN a/src/json-rpc.cc b/src/json-rpc.cc
---- a/src/json-rpc.cc
-+++ b/src/json-rpc.cc
+diff -ruN a/coot/src/json-rpc.cc b/coot/src/json-rpc.cc
+--- a/coot/src/json-rpc.cc
++++ b/coot/src/json-rpc.cc
 @@ -525,8 +525,8 @@
              std::string s = PyBytes_AS_STRING(PyUnicode_AsUTF8String(o));
              json j_result;
@@ -42,9 +42,9 @@ diff -ruN a/src/json-rpc.cc b/src/json-rpc.cc
              j_response["result"] = j_result;
              Py_DECREF(o);  // Don't leak!
           } else {
-diff -ruN a/src/python-results-container.hh b/src/python-results-container.hh
---- a/src/python-results-container.hh
-+++ b/src/python-results-container.hh
+diff -ruN a/coot/src/python-results-container.hh b/coot/src/python-results-container.hh
+--- a/coot/src/python-results-container.hh
++++ b/coot/src/python-results-container.hh
 @@ -6,7 +6,7 @@
     public:
     PyObject *result;
