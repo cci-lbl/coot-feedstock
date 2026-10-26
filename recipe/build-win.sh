@@ -37,6 +37,20 @@ for tool in ar ranlib nm strip; do
 done
 CONFIGURE_HOST="--build=$TRIPLET --host=$TRIPLET"
 
+# Some tools call the compilers by their bare names: binutils' windres
+# shells out to "gcc" to preprocess .rc files (boost's b2 engine build hits
+# this), and the conda toolchain ships only x86_64-w64-mingw32-*.exe.
+# Provide shims that both cmd.exe (.bat) and MSYS bash (scripts) resolve.
+SHIMS="$SRC_U/tool-shims"
+mkdir -p "$SHIMS"
+for pair in "gcc:$CC" "g++:$CXX" "cc:$CC" "c++:$CXX"; do
+  name=${pair%%:*}; target=${pair#*:}
+  printf '@%s %%*\r\n' "$target" > "$SHIMS/$name.bat"
+  printf '#!/bin/sh\nexec %s "$@"\n' "$target" > "$SHIMS/$name"
+  chmod +x "$SHIMS/$name"
+done
+export PATH="$SHIMS:$PATH"
+
 export CPPFLAGS="-I$LP_U/include ${CPPFLAGS:-}"
 export LDFLAGS="-L$LP_U/lib ${LDFLAGS:-}"
 export PKG_CONFIG_PATH="$LP_U/lib/pkgconfig:$LP_U/share/pkgconfig"
