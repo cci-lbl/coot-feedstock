@@ -386,18 +386,30 @@ if [ -e config.guess ] ; then rm config.guess ; fi
 make -k -j "$CORES"
 make install
 cd ..
+# libtool installs the Python extension modules as versioned DLLs; upstream's
+# install hook renames only _coot. Python imports .pyd, so rename the rest
+# and drop the libtool and import-library leftovers.
+for m in _pyrogen_swig pyrogen_boost; do
+  if [ -f "$SP_U/$m-0.dll" ]; then mv "$SP_U/$m-0.dll" "$SP_U/$m.pyd"; fi
+done
+rm -f "$SP_U"/*.la "$SP_U"/*.dll.a
 echo "Python modules:"
-ls "$SP_U" | grep -i coot || true
+ls "$SP_U" | grep -iE "coot|pyrogen|chapi" || true
 echo
 
 echo "Building cootapi via CMake"
 echo "=========================="
 cd coot
 mkdir -p build-cmake && cd build-cmake
+# The vendored RDKit was built with Eigen, so its exported targets link
+# Eigen3::Eigen; Coot's CMakeLists never looks Eigen up itself. Inject the
+# find_package right after project() instead of patching CMakeLists.txt.
+echo 'find_package(Eigen3 3.3 CONFIG REQUIRED)' > find-eigen.cmake
 cmake -G "MSYS Makefiles" \
   -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
   -DCMAKE_PREFIX_PATH="$LP_M" \
+  -DCMAKE_PROJECT_INCLUDE="$(cygpath -m "$PWD")/find-eigen.cmake" \
   -DBOOST_ROOT="$LP_M" \
   -DPython_EXECUTABLE="$PREFIX_M/python.exe" \
   ..
