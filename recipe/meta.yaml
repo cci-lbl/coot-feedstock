@@ -34,13 +34,32 @@ source:
     folder: monomers
   # VTE terminal widget (GTK4 flavor) for the Python console and AI button.
   # conda-forge's vte package is linux-64 only, so build it here.
-  - url: https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz
-    sha256: aca1caa8478aebcdbb1d67897fb3511eb7601debae6810e16a15b6fa25f31ac8
-    folder: vte
-    patches:
+  - url: https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz  # [not win]
+    sha256: aca1caa8478aebcdbb1d67897fb3511eb7601debae6810e16a15b6fa25f31ac8  # [not win]
+    folder: vte  # [not win]
+    patches:  # [not win]
       # On macOS the forked child sizes a stack buffer from RLIMIT_NOFILE
       # (8 MiB at the common 1048576 limit) and dies before exec.
-      - patches/vte-fdwalk-bounded-buffer.patch
+      - patches/vte-fdwalk-bounded-buffer.patch  # [not win]
+  # On Windows the C++ stack is built here with MinGW and vendored, because
+  # conda-forge's boost, rdkit, and gemmi are MSVC builds that MinGW cannot
+  # link. See docs/superpowers/specs/2026-10-26-windows-mingw-build-design.md.
+  - url: https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2  # [win]
+    sha256: 49551aff3b22cbc5c5a9ed3dbc92f0e23ea50a0f7325b0d198b705e8ee3fc305  # [win]
+    folder: boost  # [win]
+  - url: https://github.com/rdkit/rdkit/archive/refs/tags/Release_2026_09_1.tar.gz  # [win]
+    sha256: 86711e340759a3a0678a2e62f54f26f7ff564c3a02de0460f60b1ce89ac1bfe9  # [win]
+    folder: rdkit  # [win]
+  - url: https://github.com/project-gemmi/gemmi/archive/refs/tags/v0.7.5.tar.gz  # [win]
+    sha256: 9e2a8a51e62c69bf43f62aadf527ca4312860de8a36c12a8747d3e8ae556f0b3  # [win]
+    folder: gemmi  # [win]
+  # Coot's MinGW code path calls POSIX glob(), which mingw-w64 lacks.
+  # WinCoot vendors GNU make's copy of the glibc glob (LGPL-2.0-or-later).
+  - url: https://bernhardcl.github.io/coot/software/extras/glob-1.0.tar.bz2  # [win]
+    sha256: 17666adcac4ad42522eacac42ce4f888cc1f6b082d237500b4934f564f7f97fe  # [win]
+    folder: glob  # [win]
+    patches:  # [win]
+      - patches/glob-pattern-p-prototype.patch  # [win]
   # rdkit 2026.09.1 made the public BoundsMatrixBuilder.h include
   # BoundsMatrixBuilderDetails.h (rdkit PR #9434) but did not add the new
   # file to the CMake install list, so librdkit-dev lacks it. build.sh
@@ -60,10 +79,26 @@ source:
       - patches/coot-cmake-install-mcp.patch
       # Let the bridge import mcp 2.x (MCPServer) as well as 1.x (FastMCP).
       - patches/coot-mcp-bridge-mcp2.patch
+      # MinGW port of the newer Coot code, taken from Bernhard Lohkamp's WinCoot
+      # branch (bernhardcl/coot, gtk4): POSIX headers, winsock for the JSON-RPC
+      # socket, std::filesystem::path to string conversions, LLP64 logging
+      # overloads, link flags, layla globals, and Windows startup behavior.
+      - patches/coot-mingw-posix-headers.patch  # [win]
+      - patches/coot-mingw-stdout-member.patch  # [win]
+      - patches/coot-mingw-path-to-string.patch  # [win]
+      - patches/coot-mingw-logging-overloads.patch  # [win]
+      - patches/coot-mingw-link-flags.patch  # [win]
+      - patches/coot-mingw-layla-globals.patch  # [win]
+      - patches/coot-mingw-coot-utils.patch  # [win]
+      - patches/coot-mingw-startup.patch  # [win]
+      - patches/coot-mingw-strict-ansi.patch  # [win]
+      - patches/coot-mingw-graphics-statics.patch  # [win]
 
 build:
   number: 0
-  skip: True  # [win or py<311]
+  skip: True  # [py<311]
+  # win2 branch: iterate on one Python version; drop before merge.
+  skip: True  # [win and py != 312]
   # ignore_run_exports:
   #   - expat
   #   - gemmi
@@ -95,10 +130,24 @@ requirements:
     - zlib  # [build_platform != target_platform]
     - libgraphene  # [build_platform != target_platform]
     - pango  # [build_platform != target_platform]
-    - {{ compiler('c') }}
-    - {{ stdlib('c') }}
-    - {{ compiler('cxx') }}
-    - {{ compiler('fortran') }}
+    - {{ compiler('c') }}  # [not win]
+    - {{ stdlib('c') }}  # [not win]
+    - {{ compiler('cxx') }}  # [not win]
+    - {{ compiler('fortran') }}  # [not win]
+    # Windows: MinGW-w64 GCC and the MSYS2 autotools; see the design note.
+    - {{ compiler('m2w64_c') }}  # [win]
+    - {{ compiler('m2w64_cxx') }}  # [win]
+    - {{ stdlib('m2w64_c') }}  # [win]
+    - m2-base  # [win]
+    - m2-bash  # [win]
+    - m2-make  # [win]
+    - m2-autoconf  # [win]
+    - m2-automake1.16  # [win]
+    - m2-automake-wrapper  # [win]
+    - m2-libtool  # [win]
+    - m2-m4  # [win]
+    - m2-patch  # [win]
+    - m2-pkg-config  # [win]
     - autoconf  # [unix]
     - automake  # [unix]
     - cmake
@@ -106,49 +155,57 @@ requirements:
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
     - m4  # [unix]
-    - make
-    - meson
-    - ninja
-    - pkg-config
+    - make  # [unix]
+    - meson  # [not win]
+    - ninja  # [not win]
+    - pkg-config  # [unix]
     - swig
   host:
     - cairo
     - doxygen
+    - eigen  # [win]
     - epoxy
     - expat
-    - fast_float
-    - fmt
+    - fast_float  # [not win]
+    - fmt  # [not win]
     - freetype
     - gdk-pixbuf
-    - gemmi
+    - gemmi  # [not win]
     - glfw
     - glib
     - glm
-    - gnutls
+    - gnutls  # [not win]
     - gsl
     - guile  # [linux]
-    - libboost-python-devel
-    - libboost-devel
+    - libboost-python-devel  # [not win]
+    - libboost-devel  # [not win]
     - libcurl
     - libgl-devel  # [linux]
+    # The MinGW runtime must sit in the host env's Library/bin: the CMake
+    # build imports the nanobind module with conda's python to write the
+    # stub, and that python resolves DLLs only under its own prefix.
+    - libgcc  # [win]
+    - libgomp  # [win]
+    - libstdcxx  # [win]
+    - libwinpthread  # [win]
     - libgraphene
     - libopenblas
     - libpng
     - libsqlite
-    - lz4-c
+    - lz4-c  # [not win]
     - nanobind
     - pango
-    - pcre2
+    - pcre2  # [not win]
     - pygobject
     - python
-    - simdutf
+    - simdutf  # [not win]
     - gtk4
-    - librdkit-dev
+    - librdkit-dev  # [not win]
     - zlib
   run:
     - epoxy
     - expat
-    - gemmi
+    - gemmi  # [not win]
     - glfw
     - gsl
     - guile  # [linux]
@@ -159,7 +216,15 @@ requirements:
     - pygobject
     - python
     - gtk4
-    - librdkit
+    - librdkit  # [not win]
+    # MinGW runtime for the GCC-built Coot and its vendored C++ stack.
+    - libgcc  # [win]
+    - libgomp  # [win]
+    - libstdcxx  # [win]
+    - libwinpthread  # [win]
+    # gtk4 on win-64 ships schema XML but no gschemas.compiled and no
+    # post-link; post-link.bat compiles them with glib-compile-schemas.
+    - glib-tools  # [win]
 
 test:
   # Some packages might need a `test/commands` key to check CLI.
@@ -173,7 +238,12 @@ test:
   # requires:
   #   - pip
   commands:
-    - ls
+    - ls  # [unix]
+    - dir  # [win]
+    # Windows: the GUI build installs mini-rsr-bin.exe to Library/bin, and
+    # the CMake build's nanobind module must import against conda's python.
+    - mini-rsr-bin --help  # [win]
+    - python -c "import coot_headless_api"  # [win]
 
 about:
   home: https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/

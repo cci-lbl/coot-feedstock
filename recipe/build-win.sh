@@ -1,212 +1,485 @@
 #!/bin/bash
-# Windows build of coot under MSYS2 bash, invoked from bld.bat.
-# Mirrors the Unix build.sh but adapted for MinGW conventions:
-#   - import libraries are libfoo.dll.a (not libfoo.dylib / .so)
-#   - no Guile (not viable on Windows)
-#   - GTK4 (not GTK2 like upstream's build-it-win)
-#   - extra patches for fftw and clipper to actually link as shared DLLs
+# Windows build of coot under MSYS2 bash (m2-bash), called from bld.bat.
+#
+# Mirrors build.sh with these differences:
+#   - MinGW-w64 GCC from gcc_win-64 / gxx_win-64 instead of MSVC
+#   - boost, rdkit, and gemmi are built here and vendored, because the
+#     conda-forge copies are MSVC builds that MinGW cannot link
+#   - no guile, no vte (Python console and AI tab are absent on Windows)
+# See docs/superpowers/specs/2026-10-26-windows-mingw-build-design.md.
 
 set -e
+set -o pipefail
 
-CORES=4
+CORES=${CPU_COUNT:-4}
 
-# Convert PREFIX / SRC_DIR / RECIPE_DIR from native Windows paths to
-# MSYS2 unix-style so autotools handles them correctly.
-PREFIX="$(cygpath -u "$PREFIX")"
-SRC_DIR="$(cygpath -u "$SRC_DIR")"
-RECIPE_DIR="$(cygpath -u "$RECIPE_DIR")"
+# conda-build passes Windows paths. MSYS2 tools and autotools want /c/...,
+# native programs (cmake, b2, python) want C:/... (cygpath -m).
+PREFIX_U=$(cygpath -u "$PREFIX")
+PREFIX_M=$(cygpath -m "$PREFIX")
+LP_U=$(cygpath -u "$LIBRARY_PREFIX")
+LP_M=$(cygpath -m "$LIBRARY_PREFIX")
+SRC_U=$(cygpath -u "$SRC_DIR")
+RECIPE_U=$(cygpath -u "$RECIPE_DIR")
+SP_U=$(cygpath -u "$SP_DIR")
+PY_VER_NODOT=${PY_VER//./}
 
-cd "$SRC_DIR"
+# gcc_win-64's activation sets CC and gxx_win-64 sets CXX; be explicit so
+# every sub-build agrees. Coot's own Windows switch (macros/coot-windows.m4)
+# keys on --build, so every configure gets both --build and --host.
+TRIPLET=x86_64-w64-mingw32
+export CC=${CC:-$TRIPLET-gcc.exe}
+export CXX=${CXX:-$TRIPLET-g++.exe}
+for tool in ar ranlib nm strip; do
+  if command -v "$TRIPLET-$tool" >/dev/null 2>&1; then
+    export "$(echo "$tool" | tr '[:lower:]' '[:upper:]')=$TRIPLET-$tool"
+  fi
+done
+CONFIGURE_HOST="--build=$TRIPLET --host=$TRIPLET"
 
-# MinGW import-library suffix. CMake's find_library uses this when
-# linking against shared DLL builds.
-SHLIB_EXT="dll.a"
+# Some tools call the compilers by their bare names: binutils' windres
+# shells out to "gcc" to preprocess .rc files (boost's b2 engine build hits
+# this), and the conda toolchain ships only x86_64-w64-mingw32-*.exe.
+# Provide shims that both cmd.exe (.bat) and MSYS bash (scripts) resolve.
+SHIMS="$SRC_U/tool-shims"
+mkdir -p "$SHIMS"
+for pair in "gcc:$CC" "g++:$CXX" "cc:$CC" "c++:$CXX"; do
+  name=${pair%%:*}; target=${pair#*:}
+  printf '@%s %%*\r\n' "$target" > "$SHIMS/$name.bat"
+  printf '#!/bin/sh\nexec %s "$@"\n' "$target" > "$SHIMS/$name"
+  chmod +x "$SHIMS/$name"
+done
+export PATH="$SHIMS:$PATH"
 
-# patch glm pkg-config
-echo "Creating glm.pc"
-mkdir -p ${PREFIX}/share/pkgconfig
-echo "prefix=${PREFIX}" > ${PREFIX}/share/pkgconfig/glm.pc
-cat ${RECIPE_DIR}/glm.pc >> ${PREFIX}/share/pkgconfig/glm.pc
+# Coot's libcurl.m4 only recognizes curl through curl-config, which
+# conda-forge's win-64 libcurl does not ship. Answer from curlver.h.
+CURL_VER=$(sed -n 's/^#define LIBCURL_VERSION "\([^"]*\)".*/\1/p' "$LP_U/include/curl/curlver.h")
+CURL_VERNUM=$(sed -n 's/^#define LIBCURL_VERSION_NUM *0x\([0-9a-fA-F]*\).*/\1/p' "$LP_U/include/curl/curlver.h")
+cat > "$SHIMS/curl-config" <<EOF
+#!/bin/sh
+for a in "\$@"; do
+  case "\$a" in
+    --version) echo "libcurl $CURL_VER" ;;
+    --vernum) echo "$CURL_VERNUM" ;;
+    --cflags) echo "-I$LP_M/include" ;;
+    --libs) echo "-L$LP_M/lib -lcurl" ;;
+  esac
+done
+EOF
+chmod +x "$SHIMS/curl-config"
+echo "curl-config shim: $("$SHIMS/curl-config" --version) $("$SHIMS/curl-config" --vernum)"
 
-export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig:${PREFIX}/share/pkgconfig
+export CPPFLAGS="-I$LP_U/include ${CPPFLAGS:-}"
+export LDFLAGS="-L$LP_U/lib ${LDFLAGS:-}"
+export PKG_CONFIG_PATH="$LP_U/lib/pkgconfig:$LP_U/share/pkgconfig"
 
-echo "Building dependencies"
-echo "====================="
+cd "$SRC_U"
+
+echo "Toolchain"
+echo "========="
+$CC --version | head -1
+$CXX --version | head -1
+cmake --version | head -1
+echo "LIBRARY_PREFIX: $LP_U"
+echo "SP_DIR: $SP_U"
+echo "pkg-config --cflags gtk4: $(pkg-config --cflags gtk4)"
 echo
 
-# Refresh stale config.sub copies (some of these tarballs predate arm64
-# and modern triplets).
-for d in fftw mmdb2 ssm libccp4 clipper coot; do
-  echo "Checking ${d}"
-  if [[ -f "${d}/config.sub" ]]; then
-    cp ${RECIPE_DIR}/patches/config.sub ${d}/config.sub
-  elif [[ -d "${d}/build-aux" ]]; then
-    cp ${RECIPE_DIR}/patches/config.sub ${d}/build-aux/config.sub
+# glm ships no pkg-config file; write one the way build.sh does.
+echo "Creating glm.pc"
+mkdir -p "$LP_U/share/pkgconfig"
+echo "prefix=$LP_M" > "$LP_U/share/pkgconfig/glm.pc"
+cat "$RECIPE_U/glm.pc" >> "$LP_U/share/pkgconfig/glm.pc"
+
+# Modern config.sub for the autotools packages (the triplet above must be
+# recognized).
+for d in mmdb2 ssm libccp4 clipper coot; do
+  if [[ -f "$d/config.sub" ]]; then
+    cp "$RECIPE_U/patches/config.sub" "$d/config.sub"
+  elif [[ -d "$d/build-aux" ]]; then
+    cp "$RECIPE_U/patches/config.sub" "$d/build-aux/config.sub"
   fi
 done
 
-# maeparser
-echo "Building maeparser"
-cd maeparser
-mkdir -p build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=${PREFIX} \
-      -DMAEPARSER_BUILD_TESTS=OFF \
-      -G "MSYS Makefiles" ..
-make -j ${CORES} && make install
-cd ../..
-
-# coordgenlibs
-echo "Building coordgenlibs"
-cd coordgenlibs
-mkdir -p build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=${PREFIX} \
-      -DCOORDGEN_USE_MAEPARSER=ON \
-      -DCOORDGEN_BUILD_TESTS=OFF \
-      -DCOORDGEN_BUILD_EXAMPLE=OFF \
-      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-      -G "MSYS Makefiles" ..
-make -j ${CORES} && make install
-cd ../..
-
-# fftw (float)
-# NEEDS: recipe/patches/fftw-2.1.5_shared.patch from
-# bernhardcl/coot@gtk4 to actually build shared DLLs on MinGW.
 echo "Building fftw"
+echo "============="
 cd fftw
-if [[ -f "${RECIPE_DIR}/patches/fftw-2.1.5_shared.patch" ]]; then
-  patch -p1 < ${RECIPE_DIR}/patches/fftw-2.1.5_shared.patch
-fi
-./configure --prefix=${PREFIX} --enable-shared --disable-static --enable-float
-make -j ${CORES}
+# fftw 2.1.5 ships libtool 1.4.3, which only knows 32-bit MinGW and quietly
+# produces static archives. Regenerate libtool, configure, and the
+# Makefiles with the MSYS2 autotools; autoheader is skipped because the
+# shipped config.h.in predates templates it now insists on. Then link
+# librfftw against libfftw so -no-undefined holds.
+libtoolize --force --copy
+aclocal
+autoconf
+automake --add-missing --copy --force-missing
+./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --enable-float
+sed -i 's?^librfftw_la_LIBADD =.*?librfftw_la_LIBADD = ../fftw/libfftw.la?' rfftw/Makefile
+# -no-undefined is a libtool link flag; given at make time it reaches only
+# libtool's link lines, whereas in configure's LDFLAGS the compiler checks
+# would reject it.
+make -j "$CORES" LDFLAGS="$LDFLAGS -no-undefined"
 make install
 cd ..
 echo
 
-# mmdb2
 echo "Building mmdb2"
+echo "=============="
 cd mmdb2
-./configure --prefix=${PREFIX} --enable-shared --disable-static
-make -j ${CORES}
+patch -p1 < "$RECIPE_U/patches/mmdb2-mingw-io-file.patch"
+./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static
+make -j "$CORES"
 make install
 cd ..
 echo
 
-# ssm
 echo "Building ssm"
+echo "============"
 cd ssm
-CPPFLAGS="-I${PREFIX}/include" LDFLAGS="-L${PREFIX}/lib" \
-  ./configure --prefix=${PREFIX} --enable-shared --disable-static
-make -j ${CORES}
+./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static
+make -j "$CORES"
 make install
 cd ..
 echo
 
-# libccp4
 echo "Building libccp4"
+echo "================"
 cd libccp4
-CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types" \
-  ./configure --prefix=${PREFIX} --enable-shared --disable-static
-make -j ${CORES}
+patch -p1 < "$RECIPE_U/patches/libccp4-mingw-stdint.patch"
+# libccp4 declares putenv() and friends K&R style; under GCC 15's C23
+# default an empty parameter list means (void) and conflicts with the
+# MinGW prototypes, so build it as C17.
+CFLAGS="${CFLAGS:-} -std=gnu17 -Wno-error=incompatible-pointer-types" \
+  ./configure $CONFIGURE_HOST --prefix="$LP_U" --enable-shared --disable-static --disable-fortran
+make -j "$CORES"
 make install
 cd ..
 echo
 
-# clipper
-# NEEDS: recipe/patches/clipper_win64.patch and clipper-configure-2.patch
-# from bernhardcl/coot@gtk4. Upstream disables threading on Windows
-# ("no clean exit from WinCoot") - if you hit hang-on-quit, that's why.
 echo "Building clipper"
+echo "================"
 cd clipper
-if [[ -f "${RECIPE_DIR}/patches/clipper-configure-2.patch" ]]; then
-  patch -p1 < ${RECIPE_DIR}/patches/clipper-configure-2.patch
-fi
-if [[ -f "${RECIPE_DIR}/patches/clipper_win64.patch" ]]; then
-  patch -p1 < ${RECIPE_DIR}/patches/clipper_win64.patch
-fi
-./configure \
-  --prefix=${PREFIX} \
-  --enable-mmdb=${PREFIX} \
-  --enable-ccp4=${PREFIX} \
+patch -p1 < "$RECIPE_U/patches/clipper-mingw-sysdep.patch"
+# clipper's Makefile.am files lack -no-undefined, which libtool needs to
+# build DLLs; passing it at make time reaches every libtool link line.
+./configure $CONFIGURE_HOST \
+  --prefix="$LP_U" \
   --enable-shared --disable-static \
   --enable-mmdb \
   --enable-cif \
   --enable-ccp4 \
   --enable-minimol \
-  --enable-cns \
-  CXXFLAGS="-g -O2 -fno-strict-aliasing"
-make -j ${CORES}
+  --enable-cns
+make -j "$CORES" LDFLAGS="$LDFLAGS -no-undefined"
 make install
 cd ..
 echo
 
-# debug info
-pkg-config --list-all
-cp $PKG_CONFIG_PATH/ccp4c.pc $PKG_CONFIG_PATH/libccp4c.pc
+cp "$LP_U/lib/pkgconfig/ccp4c.pc" "$LP_U/lib/pkgconfig/libccp4c.pc"
+echo "CCP4 stack DLLs:"
+ls "$LP_U/bin" | grep -iE "fftw|mmdb|ssm|ccp4|clipper" || true
+echo
 
-# coot autotools (GUI)
-# Differences from build.sh: no --with-guile (Guile on Windows is not
-# viable; rely on Python scripting).
+echo "Building boost"
+echo "=============="
+cd boost
+# bootstrap.sh clears CXX and probes a bare g++, which this toolchain does
+# not provide, so build the b2 engine with our compiler and write the
+# project configuration by hand. b2 is a native program: C:/ paths.
+(cd tools/build/src/engine && ./build.sh --cxx="$CXX" gcc)
+B2=tools/build/src/engine/b2
+cat > project-config.jam <<JAM
+using gcc : : $CXX ;
+using python : $PY_VER : $PREFIX_M/python.exe : $PREFIX_M/include : $PREFIX_M/libs ;
+JAM
+$B2 -j "$CORES" toolset=gcc address-model=64 link=shared runtime-link=shared \
+  variant=release threading=multi --layout=system \
+  --with-python --with-thread --with-chrono --with-date_time --with-atomic \
+  --with-serialization --with-iostreams --with-regex \
+  -sZLIB_INCLUDE="$LP_M/include" -sZLIB_LIBRARY_PATH="$LP_M/lib" -sZLIB_NAME=zlib \
+  -sNO_ZSTD=1 -sNO_LZMA=1 -sNO_BZIP2=1 \
+  --prefix="$LP_M" install
+cd ..
+# b2 installs the DLLs beside the import libraries; Windows loads from bin.
+mv "$LP_U"/lib/libboost_*.dll "$LP_U/bin/" 2>/dev/null || true
+echo "boost DLLs:"
+ls "$LP_U/bin" | grep -i boost || true
+echo
+
+echo "Building maeparser"
+echo "=================="
+cd maeparser
+mkdir -p build && cd build
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DMAEPARSER_BUILD_SHARED_LIBS=ON -DMAEPARSER_BUILD_TESTS=OFF \
+  -DBOOST_ROOT="$LP_M" ..
+make -j "$CORES"
+make install
+cd ../..
+echo
+
+echo "Building coordgenlibs"
+echo "====================="
+cd coordgenlibs
+mkdir -p build && cd build
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DCOORDGEN_BUILD_SHARED_LIBS=ON -DCOORDGEN_RIGOROUS_BUILD=OFF \
+  -DCOORDGEN_USE_MAEPARSER=ON -DCOORDGEN_BUILD_TESTS=OFF -DCOORDGEN_BUILD_EXAMPLE=OFF \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_PREFIX_PATH="$LP_M" -Dmaeparser_DIR="$LP_M/lib/cmake" \
+  -DBOOST_ROOT="$LP_M" ..
+make -j "$CORES"
+make install
+cd ../..
+echo
+
+echo "Building rdkit"
+echo "=============="
+cd rdkit
+mkdir -p build && cd build
+# RDK_INSTALL_STATIC_LIBS defaults ON and on WIN32 that means static-only
+# with no RDKIT_DYN_LINK; maeparser and coordgen export their configs to a
+# bare lib/cmake. ChemDraw stays on because layla links it.
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DCMAKE_PREFIX_PATH="$LP_M" \
+  -Dmaeparser_DIR="$LP_M/lib/cmake" -Dcoordgen_DIR="$LP_M/lib/cmake" \
+  -DBOOST_ROOT="$LP_M" \
+  -DRDK_BUILD_PYTHON_WRAPPERS=OFF \
+  -DRDK_INSTALL_INTREE=OFF \
+  -DRDK_INSTALL_STATIC_LIBS=OFF \
+  -DRDK_BUILD_CPP_TESTS=OFF \
+  -DRDK_BUILD_DESCRIPTORS3D=OFF \
+  -DRDK_OPTIMIZE_POPCNT=OFF \
+  -DRDK_BUILD_INCHI_SUPPORT=OFF \
+  -DRDK_BUILD_FREESASA_SUPPORT=OFF \
+  -DRDK_BUILD_PUBCHEMSHAPE_SUPPORT=OFF \
+  -DRDK_INSTALL_COMIC_FONTS=OFF \
+  -DRDK_BUILD_COORDGEN_SUPPORT=ON \
+  -DRDK_BUILD_MAEPARSER_SUPPORT=ON \
+  -DRDK_BUILD_CHEMDRAW_SUPPORT=ON -DRDK_BUILD_CAIRO_SUPPORT=ON \
+  -DRDK_USE_BOOST_SERIALIZATION=ON \
+  -DRDK_USE_BOOST_IOSTREAMS=ON \
+  -DRDK_BUILD_THREADSAFE_SSS=ON \
+  ..
+make -j "$CORES"
+make install
+cd ..
+# rdkit installs DLLs to lib. Windows loads from bin, but Coot's CMake build
+# consumes RDKit through its exported targets, whose config checks that the
+# lib paths exist, so copy now and drop the lib copies in the final strip.
+# The install list also omits a header that BoundsMatrixBuilder.h includes
+# (rdkit PR #9434).
+cp "$LP_U"/lib/libRDKit*.dll "$LP_U/bin/"
+cp Code/GraphMol/DistGeomHelpers/BoundsMatrixBuilderDetails.h "$LP_U/include/rdkit/GraphMol/DistGeomHelpers/"
+cd ..
+echo "rdkit DLLs:"
+ls "$LP_U/bin" | grep -i rdkit | head -5 || true
+echo
+
+echo "Building gemmi"
+echo "=============="
+cd gemmi
+mkdir -p build && cd build
+# No gemmi program: conda-forge's gemmi package also installs gemmi.exe.
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DBUILD_SHARED_LIBS=ON -DUSE_PYTHON=OFF -DINSTALL_DEV_FILES=ON -DBUILD_GEMMI_PROGRAM=OFF \
+  ..
+make -j "$CORES"
+make install
+cd ../..
+mv "$LP_U"/lib/libgemmi_cpp*.dll "$LP_U/bin/" 2>/dev/null || true
+# gemmi ships no pkg-config file and Coot's configure probes gemmi.pc first.
+cat > "$LP_U/lib/pkgconfig/gemmi.pc" <<PC
+prefix=$LP_M
+includedir=\${prefix}/include
+libdir=\${prefix}/lib
+
+Name: gemmi
+Description: GEMMI macromolecular crystallography library
+Version: 0.7.5
+Cflags: -I\${includedir}
+Libs: -L\${libdir} -lgemmi_cpp
+PC
+echo "gemmi DLLs:"
+ls "$LP_U/bin" | grep -i gemmi || true
+echo
+
+echo "Building glob"
+echo "============="
+# mingw-w64 has no glob.h, and Coot's WINDOWS_MINGW code still calls
+# glob(), so build the GNU glob that WinCoot uses as a DLL. Its configure
+# predates config.sub, so it takes no --host. The 2002 source declares
+# malloc() and friends K&R style when STDC_HEADERS is unset, and its
+# configure fails that probe here, so force the ANSI path and C17. Do not
+# define _FILE_OFFSET_BITS=64: glob.h then renames glob() to glob64() with
+# an asm label, and Coot, which includes glob.h without it, links to glob().
+cd glob
+CC="$CC" CFLAGS="-O2 -std=gnu17 -DSTDC_HEADERS=1" ./configure --prefix="$LP_U"
+make
+# Link glob statically: a DLL built from it left glob() and globfree()
+# unresolved in libcoot-utils, and two small LGPL objects do not warrant
+# their own runtime library. The archive is removed from the package below.
+echo "glob symbols:"
+"$TRIPLET-nm" glob.o | tr -d '\r' | grep -v -E " [a-z] \." || true
+echo "glob archive members:"
+"$TRIPLET-ar" t libglob.a | tr -d '\r' || true
+echo "glob definitions after preprocessing:"
+$CC -E -I. -DHAVE_CONFIG_H $CPPFLAGS -std=gnu17 -DSTDC_HEADERS=1 glob.c \
+  | tr -d '\r' | grep -n -E "^(glob|globfree|__glob|glob64)[ (]" || true
+cp glob.h "$LP_U/include/"
+cp libglob.a "$LP_U/lib/"
+cd ..
+echo
+
 echo "Building coot"
 echo "============="
-echo
+# layla calls coordgen directly. Coot's configure only knows coordgen as
+# -lRDKitcoordgen (--with-coordgen), so alias our libcoordgen import library
+# under that name for the link; the strip step below removes it again.
+cp "$LP_U/lib/libcoordgen.dll.a" "$LP_U/lib/libRDKitcoordgen.dll.a"
 cd coot
 rm -rf autom4te.cache
 if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
 if [ -e config.guess ] ; then rm config.guess ; fi
 ./autogen.sh
-./configure \
-  --prefix=${PREFIX} \
+# conda's Windows python ships no python3-config, its sysconfig has no
+# LIBS/LINKFORSHARED, and Coot's python.m4 would derive the install dirs
+# through distutils, so every Python variable is preset. gsl.pc on win-64
+# carries backslash paths that pkg-config mangles, so GSL is preset too.
+# lt_cv_deplibs_check_method: libtool's file-magic test rejects MSVC .lib
+# import libraries and the static libglob.a, and silently drops every such
+# -l from DLL links; pass_all hands them to the linker unchanged.
+./configure $CONFIGURE_HOST \
+  --prefix="$LP_U" \
   --disable-static \
-  --with-backward \
-  --with-boost=${PREFIX} \
-  --with-boost-libdir=${PREFIX}/lib \
+  --with-coordgen \
+  --with-boost="$LP_U" \
+  --with-boost-libdir="$LP_U/lib" \
+  --with-boost-python="boost_python$PY_VER_NODOT" \
   --with-enhanced-ligand-tools \
-  --with-fftw-prefix=${PREFIX} \
-  --with-gemmi=${PREFIX} \
-  --with-glm=${PREFIX} \
-  --with-rdkit-prefix=${PREFIX} \
-  --with-python \
-  --with-glib-prefix=${PREFIX} \
-  --with-gtk-prefix=${PREFIX}
-make -j ${CORES}
+  --with-fftw-prefix="$LP_U" \
+  --with-gemmi="$LP_U" \
+  --with-glm="$LP_U" \
+  --with-rdkit-prefix="$LP_U" \
+  --with-glob-prefix="$LP_U" \
+  PYTHON="$PREFIX_M/python.exe" \
+  PYTHON_CPPFLAGS="-I$PREFIX_M/include" \
+  PYTHON_LIBS="-L$PREFIX_M/libs -lpython$PY_VER_NODOT" \
+  PYTHON_EXTRA_LIBS="-lm" \
+  PYTHON_EXTRA_LDFLAGS="-L$PREFIX_M/libs" \
+  am_cv_python_pythondir="$SP_U" \
+  am_cv_python_pyexecdir="$SP_U" \
+  GSL_CFLAGS="-I$LP_M/include" \
+  GSL_LIBS="-L$LP_M/lib -lgsl -lgslcblas" \
+  CXXFLAGS="-O2 -Wa,-mbig-obj" \
+  lt_cv_deplibs_check_method=pass_all
+# -k: a failing compile still stops the build (make exits non-zero) but the
+# log then carries every failing file instead of only the first.
+make -k -j "$CORES"
 make install
 cd ..
+# libtool installs the Python extension modules as versioned DLLs; upstream's
+# install hook renames only _coot. Python imports .pyd, so rename the rest
+# and drop the libtool and import-library leftovers.
+for m in _pyrogen_swig pyrogen_boost; do
+  if [ -f "$SP_U/$m-0.dll" ]; then mv "$SP_U/$m-0.dll" "$SP_U/$m.pyd"; fi
+done
+rm -f "$SP_U"/*.la "$SP_U"/*.dll.a
+echo "Python modules:"
+ls "$SP_U" | grep -iE "coot|pyrogen|chapi" || true
 echo
 
-# coot CMake build (libcootapi + coot_headless_api + MCP files)
 echo "Building cootapi via CMake"
 echo "=========================="
-echo
 cd coot
-mkdir -p build-cmake
-cd build-cmake
-cmake \
-  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DPython_EXECUTABLE=${PREFIX}/python.exe \
-  -G "MSYS Makefiles" \
+mkdir -p build-cmake && cd build-cmake
+# The vendored RDKit was built with Eigen, so its exported targets link
+# Eigen3::Eigen; Coot's CMakeLists never looks Eigen up itself. Inject the
+# find_package right after project() instead of patching CMakeLists.txt.
+# CMakeLists.txt knows MSVC (_MSC_VER) but not MinGW, so WINDOWS_MINGW is
+# passed the way Coot's configure does; glob() lives in libglob.a here and
+# CMAKE_CXX_STANDARD_LIBRARIES appends it to the end of every link line,
+# together with dbghelp and psapi for backward-cpp's Windows stack walker
+# (backward.hpp requests them with #pragma comment(lib), which only MSVC
+# honors).
+echo 'find_package(Eigen3 CONFIG REQUIRED)' > find-eigen.cmake
+cmake -G "MSYS Makefiles" \
+  -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DCMAKE_C_FLAGS="-DWINDOWS_MINGW" \
+  -DCMAKE_CXX_FLAGS="-DWINDOWS_MINGW -D_USE_MATH_DEFINES -Wa,-mbig-obj" \
+  -DCMAKE_CXX_STANDARD_LIBRARIES="$LP_M/lib/libglob.a -ldbghelp -lpsapi" \
+  -DCMAKE_PREFIX_PATH="$LP_M" \
+  -DCMAKE_PROJECT_INCLUDE="$(cygpath -m "$PWD")/find-eigen.cmake" \
+  -DBOOST_ROOT="$LP_M" \
+  -DPython_EXECUTABLE="$PREFIX_M/python.exe" \
   ..
-make -j ${CORES}
+make -j "$CORES"
 make install
 cd ../..
+# The CMake build installs Python files to lib/python3.X/site-packages
+# under the install prefix; conda's site-packages is elsewhere.
+CMAKE_SP="$LP_U/lib/python$PY_VER/site-packages"
+if [ -d "$CMAKE_SP" ]; then
+  mkdir -p "$SP_U"
+  cp -a "$CMAKE_SP"/. "$SP_U/"
+  rm -rf "$LP_U/lib/python$PY_VER"
+fi
+rm -f "$LP_U"/lib/coot_headless_api*.pyd
+echo "Python modules after CMake:"
+ls "$SP_U" | grep -iE "coot|chapi" || true
 echo
 
-# Replace the CMake-installed monomers (coot's own bundled set) with
-# the refmac-monomer-library tarball.
-mkdir -p ${PREFIX}/share/coot/lib/data
-rm -rf ${PREFIX}/share/coot/lib/data/monomers
-cp -r monomers ${PREFIX}/share/coot/lib/data/monomers
+# Replace the CMake-installed monomers with the refmac monomer library
+# and add reference-structures, as build.sh does.
+mkdir -p "$LP_U/share/coot/lib/data"
+rm -rf "$LP_U/share/coot/lib/data/monomers"
+cp -r monomers "$LP_U/share/coot/lib/data/monomers"
+rm -rf "$LP_U/share/coot/reference-structures"
+cp -r reference-structures "$LP_U/share/coot/reference-structures"
 
-# reference-structures isn't installed by either build system.
-cp -r reference-structures ${PREFIX}/share/coot/reference-structures
+# Launcher: the autotools build installs WinCoot.exe with no wrapper.
+cp "$RECIPE_U/coot.bat" "$LP_U/bin/coot.bat"
 
-# Install activate/deactivate scripts (both sh and bat - conda on
-# Windows scans both depending on which shell is in use).
-mkdir -p ${PREFIX}/etc/conda/activate.d
-mkdir -p ${PREFIX}/etc/conda/deactivate.d
-cp ${RECIPE_DIR}/coot-activate.sh   ${PREFIX}/etc/conda/activate.d/coot-activate.sh
-cp ${RECIPE_DIR}/coot-deactivate.sh ${PREFIX}/etc/conda/deactivate.d/coot-deactivate.sh
-cp ${RECIPE_DIR}/coot-activate.bat   ${PREFIX}/etc/conda/activate.d/coot-activate.bat
-cp ${RECIPE_DIR}/coot-deactivate.bat ${PREFIX}/etc/conda/deactivate.d/coot-deactivate.bat
+# Activation scripts: conda on Windows runs .bat from cmd and .sh from
+# bash-based shells, so install both. The .sh variant must point at
+# Library/share/coot on Windows.
+mkdir -p "$PREFIX_U/etc/conda/activate.d" "$PREFIX_U/etc/conda/deactivate.d"
+sed 's|\$CONDA_PREFIX/share/coot|$CONDA_PREFIX/Library/share/coot|' "$RECIPE_U/coot-activate.sh" \
+  > "$PREFIX_U/etc/conda/activate.d/coot-activate.sh"
+cp "$RECIPE_U/coot-deactivate.sh"  "$PREFIX_U/etc/conda/deactivate.d/coot-deactivate.sh"
+cp "$RECIPE_U/coot-activate.bat"   "$PREFIX_U/etc/conda/activate.d/coot-activate.bat"
+cp "$RECIPE_U/coot-deactivate.bat" "$PREFIX_U/etc/conda/deactivate.d/coot-deactivate.bat"
+
+# The vendored C++ stack ships as DLLs only. Its headers, import and static
+# libraries, libtool and pkg-config files, and CMake configs would clobber
+# conda-forge's boost, rdkit, and gemmi packages in the same environment,
+# and nothing downstream consumes them. Every .la goes: libtool files embed
+# the build-time /c/bld paths, which conda cannot relocate. The Unix shell
+# wrappers (bin/coot, bin/coot-mini-rsr, ...) are useless on Windows.
+echo "Removing vendored development files"
+rm -rf "$LP_U"/include/{boost,rdkit,gemmi,clipper,mmdb2,ssm,ccp4,maeparser,coordgen}
+rm -f  "$LP_U"/include/{fftw,rfftw,sfftw,srfftw,fftw_threads,rfftw_threads,glob}.h
+rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen,glob}*.{a,dll.a,dll}
+rm -f  "$LP_U"/lib/*.la
+rm -rf "$LP_U"/lib/cmake/{rdkit,maeparser,coordgen,Boost,boost_,RDKit}* "$LP_U"/cmake/gemmi*
+rm -f  "$LP_U"/lib/pkgconfig/{clipper,mmdb2,ssm,ccp4c,libccp4c,gemmi,fftw,rfftw,sfftw,srfftw}*.pc
+rm -rf "$LP_U"/lib/rdkit
+for f in "$LP_U"/bin/*; do
+  if [ -f "$f" ] && [ "$(head -c 2 "$f" 2>/dev/null)" = "#!" ]; then rm -f "$f"; fi
+done
+# pyrogen.bat is WinCoot's 2017 launcher (hard-coded python27 paths); in a
+# conda env pyrogen runs as "python -m pyrogen".
+rm -f "$LP_U/bin/pyrogen.bat"
+echo "Library/bin after strip:"
+ls "$LP_U/bin" | grep -iE "coot|RDKit|boost|gemmi|clipper|mmdb|ssm|ccp4|fftw" | head -60
+echo
+echo "Done"

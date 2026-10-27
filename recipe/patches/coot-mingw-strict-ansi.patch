@@ -1,0 +1,27 @@
+diff -ruN a/coot/compat/sleep-fixups.h b/coot/compat/sleep-fixups.h
+--- a/coot/compat/sleep-fixups.h
++++ b/coot/compat/sleep-fixups.h
+@@ -19,7 +19,7 @@
+  * 02110-1301, USA
+  */
+ 
+-#if defined WIN64
++#if defined WIN64 || defined _WIN64
+ #include <unistd.h>
+ #else
+ #if defined (WINDOWS_MINGW) || defined (_MSC_VER)
+diff -ruN a/coot/src/graphics-info-opengl.cc b/coot/src/graphics-info-opengl.cc
+--- a/coot/src/graphics-info-opengl.cc
++++ b/coot/src/graphics-info-opengl.cc
+@@ -838,7 +838,11 @@
+    bool extra_annotation = false;
+    time_t times = time(NULL);
+    struct tm result;
++#ifdef _WIN32
++   localtime_s(&result, &times);
++#else
+    localtime_r(&times, &result);
++#endif
+ 
+    if (result.tm_mday == 1)
+       if (result.tm_mon == 3)
