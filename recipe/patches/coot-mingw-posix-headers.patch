@@ -509,11 +509,38 @@ diff -ruN a/coot/utils/xdg-base.hh b/coot/utils/xdg-base.hh
 diff -ruN a/coot/api/molecules-container-nanobind.cc b/coot/api/molecules-container-nanobind.cc
 --- a/coot/api/molecules-container-nanobind.cc
 +++ b/coot/api/molecules-container-nanobind.cc
-@@ -1,5 +1,7 @@
+@@ -1,5 +1,10 @@
  
++// First: on Windows this includes windows.h and neutralizes its GetAtomName
++// and AddAtom macros before mmdb declares methods of those names.
++#include "compat/coot-sysdep.h"
 +#ifndef _WIN32
  #include <dlfcn.h>
 +#endif
  #include <filesystem>
  #include <unordered_map>
  #include <sstream>
+@@ -92,12 +97,23 @@
+ 
+ std::filesystem::path this_library_dir() {
+ 
++#ifdef _WIN32
++   HMODULE hm = nullptr;
++   if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
++                          reinterpret_cast<LPCSTR>(&this_library_dir), &hm)) {
++      char buf[MAX_PATH];
++      DWORD n = GetModuleFileNameA(hm, buf, MAX_PATH);
++      if (n > 0 && n < MAX_PATH)
++         return std::filesystem::canonical(buf).parent_path();
++   }
++#else
+    Dl_info info;
+    void *ll = reinterpret_cast<void *>(&this_library_dir);
+    if (dladdr(ll, &info) && info.dli_fname) {
+       // std::cout << "DEBUG:: this_library_dir(): PATH A" << std::endl;
+       return std::filesystem::canonical(info.dli_fname).parent_path();
+    }
++#endif
+ 
+    std::cout << "DEBUG:: PATH this_library_dir(): B" << std::endl;
+    return {};
