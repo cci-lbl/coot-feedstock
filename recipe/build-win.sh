@@ -476,6 +476,9 @@ rm -rf "$LP_U"/lib/rdkit
 for f in "$LP_U"/bin/*; do
   if [ -f "$f" ] && [ "$(head -c 2 "$f" 2>/dev/null)" = "#!" ]; then rm -f "$f"; fi
 done
+# pyrogen.bat is WinCoot's 2017 launcher (hard-coded python27 paths); in a
+# conda env pyrogen runs as "python -m pyrogen".
+rm -f "$LP_U/bin/pyrogen.bat"
 echo "Library/bin after strip:"
 ls "$LP_U/bin" | grep -iE "coot|RDKit|boost|gemmi|clipper|mmdb|ssm|ccp4|fftw" | head -60
 echo
