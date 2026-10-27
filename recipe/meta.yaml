@@ -92,6 +92,7 @@ source:
       - patches/coot-mingw-coot-utils.patch  # [win]
       - patches/coot-mingw-startup.patch  # [win]
       - patches/coot-mingw-strict-ansi.patch  # [win]
+      - patches/coot-mingw-graphics-statics.patch  # [win]
 
 build:
   number: 0

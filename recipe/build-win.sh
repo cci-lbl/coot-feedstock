@@ -326,7 +326,7 @@ make
 # unresolved in libcoot-utils, and two small LGPL objects do not warrant
 # their own runtime library. The archive is removed from the package below.
 echo "glob symbols:"
-"$TRIPLET-nm" libglob.a | grep -E " [A-Za-z] (glob|globfree)$" || true
+"$TRIPLET-nm" libglob.a | tr -d '\r' | grep -E " [A-Za-z] (glob|globfree)$" || true
 cp glob.h "$LP_U/include/"
 cp libglob.a "$LP_U/lib/"
 cd ..
@@ -334,6 +334,10 @@ echo
 
 echo "Building coot"
 echo "============="
+# layla calls coordgen directly. Coot's configure only knows coordgen as
+# -lRDKitcoordgen (--with-coordgen), so alias our libcoordgen import library
+# under that name for the link; the strip step below removes it again.
+cp "$LP_U/lib/libcoordgen.dll.a" "$LP_U/lib/libRDKitcoordgen.dll.a"
 cd coot
 rm -rf autom4te.cache
 if [ -e ltmain.sh    ] ; then rm ltmain.sh    ; fi
@@ -343,9 +347,13 @@ if [ -e config.guess ] ; then rm config.guess ; fi
 # LIBS/LINKFORSHARED, and Coot's python.m4 would derive the install dirs
 # through distutils, so every Python variable is preset. gsl.pc on win-64
 # carries backslash paths that pkg-config mangles, so GSL is preset too.
+# lt_cv_deplibs_check_method: libtool's file-magic test rejects MSVC .lib
+# import libraries and the static libglob.a, and silently drops every such
+# -l from DLL links; pass_all hands them to the linker unchanged.
 ./configure $CONFIGURE_HOST \
   --prefix="$LP_U" \
   --disable-static \
+  --with-coordgen \
   --with-boost="$LP_U" \
   --with-boost-libdir="$LP_U/lib" \
   --with-boost-python="boost_python$PY_VER_NODOT" \
@@ -364,7 +372,8 @@ if [ -e config.guess ] ; then rm config.guess ; fi
   am_cv_python_pyexecdir="$SP_U" \
   GSL_CFLAGS="-I$LP_M/include" \
   GSL_LIBS="-L$LP_M/lib -lgsl -lgslcblas" \
-  CXXFLAGS="-O2 -Wa,-mbig-obj"
+  CXXFLAGS="-O2 -Wa,-mbig-obj" \
+  lt_cv_deplibs_check_method=pass_all
 # -k: a failing compile still stops the build (make exits non-zero) but the
 # log then carries every failing file instead of only the first.
 make -k -j "$CORES"
