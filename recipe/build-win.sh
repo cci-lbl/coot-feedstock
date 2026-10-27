@@ -318,9 +318,11 @@ echo "============="
 # glob(), so build the GNU glob that WinCoot uses as a DLL. Its configure
 # predates config.sub, so it takes no --host. The 2002 source declares
 # malloc() and friends K&R style when STDC_HEADERS is unset, and its
-# configure fails that probe here, so force the ANSI path and C17.
+# configure fails that probe here, so force the ANSI path and C17. Do not
+# define _FILE_OFFSET_BITS=64: glob.h then renames glob() to glob64() with
+# an asm label, and Coot, which includes glob.h without it, links to glob().
 cd glob
-CC="$CC" CFLAGS="-O2 -std=gnu17 -DSTDC_HEADERS=1 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" ./configure --prefix="$LP_U"
+CC="$CC" CFLAGS="-O2 -std=gnu17 -DSTDC_HEADERS=1" ./configure --prefix="$LP_U"
 make
 # Link glob statically: a DLL built from it left glob() and globfree()
 # unresolved in libcoot-utils, and two small LGPL objects do not warrant
@@ -330,7 +332,7 @@ echo "glob symbols:"
 echo "glob archive members:"
 "$TRIPLET-ar" t libglob.a | tr -d '\r' || true
 echo "glob definitions after preprocessing:"
-$CC -E -I. -DHAVE_CONFIG_H $CPPFLAGS -std=gnu17 -DSTDC_HEADERS=1 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 glob.c \
+$CC -E -I. -DHAVE_CONFIG_H $CPPFLAGS -std=gnu17 -DSTDC_HEADERS=1 glob.c \
   | tr -d '\r' | grep -n -E "^(glob|globfree|__glob|glob64)[ (]" || true
 cp glob.h "$LP_U/include/"
 cp libglob.a "$LP_U/lib/"
