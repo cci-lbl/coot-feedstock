@@ -404,10 +404,16 @@ mkdir -p build-cmake && cd build-cmake
 # The vendored RDKit was built with Eigen, so its exported targets link
 # Eigen3::Eigen; Coot's CMakeLists never looks Eigen up itself. Inject the
 # find_package right after project() instead of patching CMakeLists.txt.
-echo 'find_package(Eigen3 3.3 CONFIG REQUIRED)' > find-eigen.cmake
+# CMakeLists.txt knows MSVC (_MSC_VER) but not MinGW, so WINDOWS_MINGW is
+# passed the way Coot's configure does; glob() lives in libglob.a here and
+# CMAKE_CXX_STANDARD_LIBRARIES appends it to the end of every link line.
+echo 'find_package(Eigen3 CONFIG REQUIRED)' > find-eigen.cmake
 cmake -G "MSYS Makefiles" \
   -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
+  -DCMAKE_C_FLAGS="-DWINDOWS_MINGW" \
+  -DCMAKE_CXX_FLAGS="-DWINDOWS_MINGW -D_USE_MATH_DEFINES -Wa,-mbig-obj" \
+  -DCMAKE_CXX_STANDARD_LIBRARIES="$LP_M/lib/libglob.a" \
   -DCMAKE_PREFIX_PATH="$LP_M" \
   -DCMAKE_PROJECT_INCLUDE="$(cygpath -m "$PWD")/find-eigen.cmake" \
   -DBOOST_ROOT="$LP_M" \

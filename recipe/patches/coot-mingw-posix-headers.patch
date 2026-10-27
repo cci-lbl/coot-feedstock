@@ -506,3 +506,14 @@ diff -ruN a/coot/utils/xdg-base.hh b/coot/utils/xdg-base.hh
     }
  };
  
+diff -ruN a/coot/api/molecules-container-nanobind.cc b/coot/api/molecules-container-nanobind.cc
+--- a/coot/api/molecules-container-nanobind.cc
++++ b/coot/api/molecules-container-nanobind.cc
+@@ -1,5 +1,7 @@
+ 
++#ifndef _WIN32
+ #include <dlfcn.h>
++#endif
+ #include <filesystem>
+ #include <unordered_map>
+ #include <sstream>
