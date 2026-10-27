@@ -406,14 +406,17 @@ mkdir -p build-cmake && cd build-cmake
 # find_package right after project() instead of patching CMakeLists.txt.
 # CMakeLists.txt knows MSVC (_MSC_VER) but not MinGW, so WINDOWS_MINGW is
 # passed the way Coot's configure does; glob() lives in libglob.a here and
-# CMAKE_CXX_STANDARD_LIBRARIES appends it to the end of every link line.
+# CMAKE_CXX_STANDARD_LIBRARIES appends it to the end of every link line,
+# together with dbghelp and psapi for backward-cpp's Windows stack walker
+# (backward.hpp requests them with #pragma comment(lib), which only MSVC
+# honors).
 echo 'find_package(Eigen3 CONFIG REQUIRED)' > find-eigen.cmake
 cmake -G "MSYS Makefiles" \
   -DCMAKE_INSTALL_PREFIX="$LP_M" -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" \
   -DCMAKE_C_FLAGS="-DWINDOWS_MINGW" \
   -DCMAKE_CXX_FLAGS="-DWINDOWS_MINGW -D_USE_MATH_DEFINES -Wa,-mbig-obj" \
-  -DCMAKE_CXX_STANDARD_LIBRARIES="$LP_M/lib/libglob.a" \
+  -DCMAKE_CXX_STANDARD_LIBRARIES="$LP_M/lib/libglob.a -ldbghelp -lpsapi" \
   -DCMAKE_PREFIX_PATH="$LP_M" \
   -DCMAKE_PROJECT_INCLUDE="$(cygpath -m "$PWD")/find-eigen.cmake" \
   -DBOOST_ROOT="$LP_M" \
