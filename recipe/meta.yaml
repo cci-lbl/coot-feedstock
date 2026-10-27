@@ -91,6 +91,7 @@ source:
       - patches/coot-mingw-layla-globals.patch  # [win]
       - patches/coot-mingw-coot-utils.patch  # [win]
       - patches/coot-mingw-startup.patch  # [win]
+      - patches/coot-mingw-strict-ansi.patch  # [win]
 
 build:
   number: 0

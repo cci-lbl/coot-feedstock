@@ -67,3 +67,15 @@ diff -ruN a/coot/src/startup.cc b/coot/src/startup.cc
        run_python_script(script.string().c_str());
     }
  #ifdef USE_GUILE
+diff -ruN a/coot/src/molecule-class-info-mol-tris.cc b/coot/src/molecule-class-info-mol-tris.cc
+--- a/coot/src/molecule-class-info-mol-tris.cc
++++ b/coot/src/molecule-class-info-mol-tris.cc
+@@ -165,7 +165,7 @@
+       // depend on coot-utils), so resolve the helix reference template's absolute path
+       // here instead - otherwise it only works when coot happens to be run from a
+       // directory that happens to contain theor-helix-z-ori-v2.pdb.
+-      std::string helix_template_pdb_file_name = std::filesystem::path(coot::package_data_dir()) / "theor-helix-z-ori-v2.pdb";
++      std::string helix_template_pdb_file_name = (std::filesystem::path(coot::package_data_dir()) / "theor-helix-z-ori-v2.pdb").string();
+ 
+       coot::m2t::simple_mesh_t tubes_mesh =
+          make_tubes_representation(atom_sel.mol, atom_selection, colour_scheme, radius_for_coil, Cn_for_coil,

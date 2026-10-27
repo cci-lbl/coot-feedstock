@@ -262,7 +262,7 @@ cmake -G "MSYS Makefiles" \
   -DRDK_INSTALL_COMIC_FONTS=OFF \
   -DRDK_BUILD_COORDGEN_SUPPORT=ON \
   -DRDK_BUILD_MAEPARSER_SUPPORT=ON \
-  -DRDK_BUILD_CHEMDRAW_SUPPORT=ON \
+  -DRDK_BUILD_CHEMDRAW_SUPPORT=ON -DRDK_BUILD_CAIRO_SUPPORT=ON \
   -DRDK_USE_BOOST_SERIALIZATION=ON \
   -DRDK_USE_BOOST_IOSTREAMS=ON \
   -DRDK_BUILD_THREADSAFE_SSS=ON \
@@ -322,10 +322,13 @@ echo "============="
 cd glob
 CC="$CC" CFLAGS="-O2 -std=gnu17 -DSTDC_HEADERS=1 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64" ./configure --prefix="$LP_U"
 make
-$CC -shared -o libglob.dll *.o -Wl,--out-implib,libglob.dll.a
+# Link glob statically: a DLL built from it left glob() and globfree()
+# unresolved in libcoot-utils, and two small LGPL objects do not warrant
+# their own runtime library. The archive is removed from the package below.
+echo "glob symbols:"
+$NM libglob.a | grep -E " [A-Za-z] (glob|globfree)$" || true
 cp glob.h "$LP_U/include/"
-cp libglob.dll "$LP_U/bin/"
-cp libglob.dll.a "$LP_U/lib/"
+cp libglob.a "$LP_U/lib/"
 cd ..
 echo
 
