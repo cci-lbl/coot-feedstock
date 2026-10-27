@@ -326,7 +326,7 @@ make
 # unresolved in libcoot-utils, and two small LGPL objects do not warrant
 # their own runtime library. The archive is removed from the package below.
 echo "glob symbols:"
-$NM libglob.a | grep -E " [A-Za-z] (glob|globfree)$" || true
+"$TRIPLET-nm" libglob.a | grep -E " [A-Za-z] (glob|globfree)$" || true
 cp glob.h "$LP_U/include/"
 cp libglob.a "$LP_U/lib/"
 cd ..
