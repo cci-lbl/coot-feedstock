@@ -1,0 +1,5 @@
+# conda-smithy rewrites the top-level .gitattributes on rerender, so the
+# build scripts keep their line endings from here.
+*.sh text eol=lf
+*.bat text eol=crlf
+*.patch -text
