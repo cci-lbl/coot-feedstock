@@ -1,0 +1,35 @@
+Include unistd.h before windows.h on MinGW.
+
+With windows.h first, its Sleep prototype and the "sleep" macro defined
+here turn unistd.h's declaration of sleep() into a conflicting
+declaration of Sleep(). Taken from WinCoot's mmdb_io_file.cpp.patch
+(bernhardcl.github.io/coot/software/extras), refreshed for mmdb2 2.0.22.
+
+--- a/mmdb2/mmdb_io_file.cpp
++++ b/mmdb2/mmdb_io_file.cpp
+@@ -40,6 +40,12 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
++
++#if !defined _WIN32 || defined __MINGW32__
++# ifndef  __UNISTD_H
++#  include <unistd.h>
++# endif
++#endif
+ 
+ #ifdef  _WIN32
+ #define WIN32_LEAN_AND_MEAN
+@@ -47,12 +53,6 @@
+ #ifndef sleep
+ # define sleep Sleep
+ #endif
+-#endif
+-
+-#if !defined _WIN32 || defined __MINGW32__
+-# ifndef  __UNISTD_H
+-#  include <unistd.h>
+-# endif
+ #endif
+ 
+ 
