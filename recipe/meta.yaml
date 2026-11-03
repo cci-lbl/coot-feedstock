@@ -96,7 +96,7 @@ source:
 
 build:
   number: 0
-  skip: True  # [py<311]
+  skip: True  # [py != 311]
   # ignore_run_exports:
   #   - expat
   #   - gemmi
