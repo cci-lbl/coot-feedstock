@@ -1,0 +1,46 @@
+cairo:
+- '1'
+channel_sources:
+- conda-forge
+channel_targets:
+- cctbx-dev main
+expat:
+- '2'
+freetype:
+- '2'
+gdk_pixbuf:
+- '2'
+glib:
+- '2'
+gsl:
+- '2.7'
+libcurl:
+- '8'
+libpng:
+- '1.6'
+libsqlite:
+- '3'
+m2w64_c_compiler:
+- gcc
+m2w64_c_compiler_version:
+- '15'
+m2w64_c_stdlib:
+- m2w64-sysroot
+m2w64_c_stdlib_version:
+- '12'
+m2w64_cxx_compiler:
+- gxx
+m2w64_cxx_compiler_version:
+- '15'
+pango:
+- '1'
+pin_run_as_build:
+  python:
+    min_pin: x.x
+    max_pin: x.x
+python:
+- 3.11.* *_cpython
+target_platform:
+- win-64
+zlib:
+- '1'
