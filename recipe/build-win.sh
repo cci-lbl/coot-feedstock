@@ -440,3 +440,46 @@ rm -rf "$LP_U/share/coot/lib/data/monomers"
 cp -r monomers "$LP_U/share/coot/lib/data/monomers"
 rm -rf "$LP_U/share/coot/reference-structures"
 cp -r reference-structures "$LP_U/share/coot/reference-structures"
+
+# Launcher: the autotools build installs WinCoot.exe with no wrapper.
+cp "$RECIPE_U/coot.bat" "$LP_U/bin/coot.bat"
+
+# Activation scripts: conda on Windows runs .bat from cmd and .sh from
+# bash-based shells, so install both. The .sh variant must point at
+# Library/share/coot on Windows.
+mkdir -p "$PREFIX_U/etc/conda/activate.d" "$PREFIX_U/etc/conda/deactivate.d"
+sed 's|\$CONDA_PREFIX/share/coot|$CONDA_PREFIX/Library/share/coot|' "$RECIPE_U/coot-activate.sh" \
+  > "$PREFIX_U/etc/conda/activate.d/coot-activate.sh"
+cp "$RECIPE_U/coot-deactivate.sh"  "$PREFIX_U/etc/conda/deactivate.d/coot-deactivate.sh"
+cp "$RECIPE_U/coot-activate.bat"   "$PREFIX_U/etc/conda/activate.d/coot-activate.bat"
+cp "$RECIPE_U/coot-deactivate.bat" "$PREFIX_U/etc/conda/deactivate.d/coot-deactivate.bat"
+
+# The vendored C++ stack ships as DLLs only. Its headers, import and static
+# libraries, libtool and pkg-config files, and CMake configs would clobber
+# conda-forge's boost, rdkit, and gemmi packages in the same environment,
+# and nothing downstream consumes them. Every .la goes: libtool files embed
+# the build-time /c/bld paths, which conda cannot relocate. The Unix shell
+# wrappers (bin/coot, bin/coot-mini-rsr, ...) are useless on Windows.
+echo "Removing vendored development files"
+rm -rf "$LP_U"/include/{boost,rdkit,gemmi,clipper,mmdb2,ssm,ccp4,maeparser,coordgen}
+rm -f  "$LP_U"/include/{fftw,rfftw,sfftw,srfftw,fftw_threads,rfftw_threads,glob}.h
+rm -f  "$LP_U"/lib/lib{boost_,RDKit,gemmi,clipper,mmdb2,ssm,ccp4c,fftw,rfftw,maeparser,coordgen,glob}*.{a,dll.a,dll}
+rm -f  "$LP_U"/lib/*.la
+rm -rf "$LP_U"/lib/cmake/{rdkit,maeparser,coordgen,Boost,boost_,RDKit}* "$LP_U"/cmake/gemmi*
+rm -f  "$LP_U"/lib/pkgconfig/{clipper,mmdb2,ssm,ccp4c,libccp4c,gemmi,fftw,rfftw,sfftw,srfftw}*.pc
+rm -rf "$LP_U"/lib/rdkit
+# The vendored RDKit's share tree (Docs, Contrib, Data) is not read by the
+# vendored libraries; Coot's chemical-feature clustering wants only
+# Data/BaseFeatures.fdef, which the rdkit run dependency provides at the
+# same path. Shipping it here would collide with conda-forge's librdkit.
+rm -rf "$LP_U/share/RDKit"
+for f in "$LP_U"/bin/*; do
+  if [ -f "$f" ] && [ "$(head -c 2 "$f" 2>/dev/null)" = "#!" ]; then rm -f "$f"; fi
+done
+# pyrogen.bat is WinCoot's 2017 launcher (hard-coded python27 paths); in a
+# conda env pyrogen runs as "python -m pyrogen".
+rm -f "$LP_U/bin/pyrogen.bat"
+echo "Library/bin after strip:"
+ls "$LP_U/bin" | grep -iE "coot|RDKit|boost|gemmi|clipper|mmdb|ssm|ccp4|fftw" | head -60
+echo
+echo "Done"
