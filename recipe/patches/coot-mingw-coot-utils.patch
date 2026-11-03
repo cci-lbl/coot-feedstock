@@ -1,0 +1,143 @@
+diff -ruN a/coot/utils/coot-utils.cc b/coot/utils/coot-utils.cc
+--- a/coot/utils/coot-utils.cc
++++ b/coot/utils/coot-utils.cc
+@@ -47,6 +47,7 @@
+ #include <unistd.h>
+ #include <pwd.h>
+ #endif // MINGW
++#include "win-compat.hh"
+ #include <glob.h>
+ #endif
+ 
+@@ -74,8 +75,14 @@
+ #ifdef _MSC_VER
+    char *exec_path = _fullpath(NULL, argv0.c_str(), MAX_PATH);
+ #else
++#ifdef WINDOWS_MINGW
++   // above does not work properly on DOS only msys
++   char exec_path[MAX_PATH];
++   GetModuleFileName(NULL, exec_path, MAX_PATH);
++#else
+    char *exec_path = realpath(argv0.c_str(), NULL);
+-#endif
++#endif // WINDOWS_MINGW
++#endif // MSC
+ 
+    if (exec_path) {
+       // std::cout << "set_realpath_for_coot_executable(): got exec_path " << exec_path << std::endl;
+@@ -97,13 +104,28 @@
+    std::string s;
+ 
+    s = s1;
+-   s += "/";
++   if (is_dos()) {
++      s += "\\";
++   } else {
++      s += "/";
++   }
+    s += dir;
+ 
+    return s;
+ 
+ }
+ 
++// true if DOS shell, false if msys2;
++bool
++coot::util::is_dos() {
++   const char* s = getenv("MSYSTEM");
++   if (!s) {
++      return TRUE;
++   } else {
++      return FALSE;
++   }
++}
++
+ std::string
+ coot::util::append_dir_file(const std::string &s1, const std::string &file) {
+ 
+@@ -954,11 +976,22 @@
+ 
+ std::string
+ coot::get_home_dir() {
+-   const char *s = getenv("HOME");
++   const char* home;
++   const char* alt_home;
++   const char* s;
++#ifdef WINDOWS_MINGW
++   home = "COOT_HOME";
++   alt_home = "HOME";
++#else
++   home = "HOME";
++   alt_home = "COOT_HOME";
++#endif
++
++   s = getenv(home);
+    if (s) {
+       return std::string(s);
+    } else {
+-      s = getenv("COOT_HOME");
++      s = getenv(alt_home);
+       if (s)
+          return std::string(s);
+    }
+@@ -1050,9 +1083,8 @@
+ 	 return dir;
+       } else {
+ 	 // try to create in $HOME
+-	 const char *e = getenv("HOME");
+-	 if (e) {
+-	    std::string home(e);
++         std::string home = get_home_dir();
++	 if (!home.empty()) {
+ 	    const std::string d = util::append_dir_dir(home, dir);
+ 	    fstat = stat(d.c_str(), &s);
+ 	    if (fstat == -1) {
+@@ -1812,3 +1844,17 @@
+ 
+    return success;
+ }
++
++// return 0 on success
++int coot::rename(const std::string &f1, const std::string &f2) {
++
++   // std::cout << "coot_rename \"" << f1 << "\" to \"" << f2 << "\"" << std::endl;
++
++#ifndef WINDOWS_MINGW
++   int status = rename(f1.c_str(), f2.c_str());
++#else
++   int status = coot::rename_win(f1.c_str(), f2.c_str());
++#endif
++   return status;
++}
++
+diff -ruN a/coot/utils/coot-utils.hh b/coot/utils/coot-utils.hh
+--- a/coot/utils/coot-utils.hh
++++ b/coot/utils/coot-utils.hh
+@@ -35,6 +35,10 @@
+ 
+    std::string get_home_dir();
+ 
++   // return the directory where the preferences are found:
++   // Linux (Mac): $HOME\.coot
++   // Windows:     %USERPROFILE%\COOT
++   std::string preferences_dir();
+ 
+    // Set an override for package_data_dir(). It is set by libcootapi so that
+    // chapi can find its data files on startup when the nanobindings are bound.
+@@ -76,6 +80,8 @@
+ 
+    // return true for success - Use to copy text files with new lines.
+    bool copy_file(const std::string &from_file, const std::string &to_file);
++   // return 0 for success
++   int rename(const std::string &f1, const std::string &f2);
+ 
+    namespace sequence {
+ 
+@@ -101,6 +107,7 @@
+       std::string current_working_dir();
+       std::string append_dir_dir (const std::string &s1, const std::string &dir);
+       std::string append_dir_file(const std::string &s1, const std::string &file);
++      bool is_dos();
+ 
+       // If cwd is a substring of f, then return the basename of f (i.e. cwd
+       // stripped from f).  If cwd is not a substring of f, then return f;
