@@ -79,6 +79,8 @@ source:
       - patches/coot-cmake-install-mcp.patch
       # Let the bridge import mcp 2.x (MCPServer) as well as 1.x (FastMCP).
       - patches/coot-mcp-bridge-mcp2.patch
+      # exec the binary from bin/coot so the launched pid is Coot's.
+      - patches/coot-wrapper-exec.patch
       # MinGW port of the newer Coot code, taken from Bernhard Lohkamp's WinCoot
       # branch (bernhardcl/coot, gtk4): POSIX headers, winsock for the JSON-RPC
       # socket, std::filesystem::path to string conversions, LLP64 logging

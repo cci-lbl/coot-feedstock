@@ -1,0 +1,16 @@
+Exec the Coot binary from the bin/coot wrapper.
+
+Without exec, the process that starts bin/coot gets the pid of a /bin/sh
+that waits on coot-1 (Linux) or MacCoot (macOS). Callers that track Coot
+by that pid, such as phenix.agent, see the shell exit before Coot does.
+With exec, the pid is Coot's. The exported LC_ALL, LANG and SYMINFO and
+the exit status are unchanged.
+
+--- a/coot/src/coot.in
++++ b/coot/src/coot.in
+@@ -4,4 +4,4 @@
+ prefix=@prefix@
+ export SYMINFO=$prefix/share/coot/data/syminfo.lib
+ exec_prefix=@exec_prefix@
+-@libexecdir@/@COOT_BINARY_NAME@ "$@"
++exec @libexecdir@/@COOT_BINARY_NAME@ "$@"
